@@ -1,0 +1,9 @@
+PRiDe is replication protocol that is used for distributed real-time systems.
+
+PRiDe is build on top of a number of berkeley DB databases that is used to store data that PRiDe uses.
+
+Requirements:
+	
+	- Berkeley DB v.4.8 
+	- OSSP-uuid 
+	- pthreads

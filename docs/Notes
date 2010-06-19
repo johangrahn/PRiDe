@@ -1,0 +1,20 @@
+This document hold general information about the parts of the project
+
+Threads
+	Each thread waits for a barrier that is used by all threads to startup 
+	before any operations is performed 
+
+Communication 
+	Receiver holds TCP connections to each replica 
+
+	When data is propagated, a new TCP connection is performed 
+	to the given replica. Receiver checks if there is any connection 
+	that already exists. If not, store the connection. If a connection 
+	exists, drop the connection.
+
+
+
+
+Data Storage 
+
+
