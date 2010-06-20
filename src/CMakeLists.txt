@@ -18,10 +18,10 @@ ADD_LIBRARY( common STATIC
 	DBoid.c
 )
 
-link_directories(
+LINK_DIRECTORIES(
 	${GLIB_LIBRARY_DIRS}
 )
 
-add_executable( pride pride.c )
+ADD_EXECUTABLE( pride pride.c )
 
-target_link_libraries( pride common ${BDB_LIB_DIR} ${GLIB_LIBRARIES} uuid )
+TARGET_LINK_LIBRARIES( pride common ${BDB_LIB_DIR} ${GLIB_LIBRARIES} uuid )
