@@ -15,6 +15,7 @@ ADD_LIBRARY( common STATIC
 	Propagate.c
 	Replica.c
 	Network.c
+	DBoid.c
 )
 
 link_directories(
@@ -23,4 +24,4 @@ link_directories(
 
 add_executable( pride pride.c )
 
-target_link_libraries( pride common ${BDB_LIB_DIR} ${GLIB_LIBRARIES} )
+target_link_libraries( pride common ${BDB_LIB_DIR} ${GLIB_LIBRARIES} uuid )

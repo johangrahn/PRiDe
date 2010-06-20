@@ -39,15 +39,16 @@
 #include <stdio.h>
 
 
-#include "config.h"
-#include "replica.h"
+#include "Config.h"
+#include "Replica.h"
 #include "Debug.h"
-#include "network.h"
-#include "package.h"
-#include "receiver.h"
-#include "propagate.h"
+#include "Network.h"
+#include "Package.h"
+#include "Receiver.h"
+#include "Propagate.h"
 
 #include "ConflictSet.h"
+#include "DBoid.h"
 
 void pride_usage();
 int pride_handle_args( int argc, char **argv );
@@ -59,7 +60,8 @@ void pride_sighandler(int sig);
 int main( int argc, char **argv )
 {
 	MethodCallObject methodCallObject;
-
+	dboid_t dbstr;
+	
 	signal(SIGINT, pride_sighandler);
 	signal(SIGTERM, pride_sighandler);
 	
@@ -73,6 +75,9 @@ int main( int argc, char **argv )
 		exit( 1 );
 
 	}
+	
+	__DEBUG( "Created DB string: %s", dbstr );
+	
 	
 	ConflictSet_initVars( &__conf.conflictSet, 10 );
 	
