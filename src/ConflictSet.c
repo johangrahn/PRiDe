@@ -117,9 +117,35 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			conflictSet->generations[generationPosition].number = conflictSet->maxGeneration;
 		}
 		else {
-			/* Generation needs to be created */
-			__WARNING( "We need wto create some generations here" );
+					
+			/* Check if the generation is within the allowed span of valid generations */	
+			if( sourceGeneration >= conflictSet->minGeneration && 
+				( sourceGeneration - conflictSet->minGeneration ) <= conflictSet->numberOfGenerations )	{			
 			
+				/* Create generations until the source generation is reached */
+				while( 1 ) {
+				
+					/* Create a new generation */
+					ConflictSet_createNewGeneration( conflictSet );
+			
+					/* Check if this generation is the required generation for the remote update */
+					if( conflictSet->maxGeneration == sourceGeneration ) {
+						__DEBUG( "Create new generation(s) for remote update" );
+
+						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_UPDATE;
+						conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;	
+					
+						break;			
+					}
+			
+				}
+			}
+			else {
+				__ERROR( "MCO <%s> with generation %d is not allowed, highest is %d", 
+					methodCallObject->methodName, sourceGeneration, conflictSet->maxGeneration );
+			}
+			
+			generationPosition = conflictSet->maxPosition;
 		}
 		
 	}
@@ -167,6 +193,16 @@ int ConflictSet_getGenerationPosition( ConflictSet *conflictSet, int generation 
 	}
 	
 	return -1;
+}
+
+void ConflictSet_createNewGeneration( ConflictSet *conflictSet )
+{
+	/* Increase the pointer that locates the highest generation in the conflict set */
+	conflictSet->maxPosition = (conflictSet->maxPosition + 1 ) % conflictSet->numberOfGenerations;
+	conflictSet->maxGeneration++;
+	
+	Generation_init( &conflictSet->generations[conflictSet->maxPosition] );
+	conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 }
 
 

@@ -97,7 +97,15 @@ int main( int argc, char **argv )
 
 		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		
+		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+			ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+			ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+			ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+			ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+			ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );	
 	}
 	
 
