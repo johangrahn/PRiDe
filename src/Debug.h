@@ -20,6 +20,7 @@
 
 #ifndef NDEBUG
 	#define __DEBUG(fmt, ...) fprintf (__conf.log, "[%d] " fmt "\n", __conf.id, ##__VA_ARGS__ ); fflush( __conf.log )
+	#define __WARNING(fmt, ...) fprintf (__conf.log, "\n[%d] WARNING: " fmt "\n\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
 	#define __ERROR(fmt, ...) fprintf (__conf.log, "[%d] ERROR: " fmt "\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
 #else
 	#define __DEBUG(fmt, ...) 

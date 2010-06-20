@@ -60,7 +60,6 @@ void pride_sighandler(int sig);
 int main( int argc, char **argv )
 {
 	MethodCallObject methodCallObject;
-	dboid_t dbstr;
 	
 	signal(SIGINT, pride_sighandler);
 	signal(SIGTERM, pride_sighandler);
@@ -76,7 +75,6 @@ int main( int argc, char **argv )
 
 	}
 	
-	__DEBUG( "Created DB string: %s", dbstr );
 	
 	
 	ConflictSet_initVars( &__conf.conflictSet, 10 );

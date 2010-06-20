@@ -118,7 +118,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		}
 		else {
 			/* Generation needs to be created */
-			__DEBUG( "We need to create some generations here" );
+			__WARNING( "We need wto create some generations here" );
 			
 		}
 		
