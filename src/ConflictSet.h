@@ -51,8 +51,8 @@ typedef struct _ConflictSet {
 	int minGeneration,
 		maxGeneration;	
 
-	/* Logging */
-	FILE *logFile;	
+	/* Stores the dboid that is used for the conflict set */
+	char dboid[40];
 	
 	/*
 	 * Condition variable that signals when a gneration is complete, 

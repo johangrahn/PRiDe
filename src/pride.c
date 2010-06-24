@@ -56,13 +56,17 @@ void pride_parse_arg_str( char *string, GSList **replicas);
 
 void pride_cleanup();
 void pride_sighandler(int sig);
+void pride_error(int sig) { __ERROR("SIGSEGV");	exit(1);}
 
 int main( int argc, char **argv )
 {
 	MethodCallObject methodCallObject;
 	ConflictSet *conflictSet;
-	signal(SIGINT, pride_sighandler);
-	signal(SIGTERM, pride_sighandler);
+	dboid_t dboid;
+	
+	signal(SIGINT, pride_sighandler );
+	signal(SIGTERM, pride_sighandler );
+	signal(SIGSEGV, pride_error );
 	
 	pthread_cond_init( &__conf.listenDoneCondition, NULL );
 	pthread_mutex_init(  &__conf.listenMutex, NULL );
@@ -75,13 +79,15 @@ int main( int argc, char **argv )
 
 	}
 	
+	dboid = dboidCreate("object1");
 	
 	conflictSet = malloc( sizeof(ConflictSet) );
 	
 	ConflictSet_initVars( conflictSet, 10 );
+	dboidCopy( conflictSet->dboid, dboid, sizeof( conflictSet->dboid ) );
 	
 	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
-	g_hash_table_insert( __conf.conflictSets, "abc123", conflictSet );
+	g_hash_table_insert( __conf.conflictSets, dboid, conflictSet );
 	
 	
 	pthread_create( &__conf.receiver, NULL, receiverThread, NULL );

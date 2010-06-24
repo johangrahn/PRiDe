@@ -28,7 +28,10 @@
 typedef char* dboid_t;
 
 /* Creates a new database object id from a unique name */
-dboid_t createDBoid( char *name );
+dboid_t dboidCreate( char *name );
+
+
+void dboidCopy(dboid_t dboid1, dboid_t dboid2, unsigned int size );
 
 
 #endif 

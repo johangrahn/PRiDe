@@ -18,7 +18,7 @@
 
 #include "DBoid.h"
 
-dboid_t createDBoid( char *name )
+dboid_t dboidCreate( char *name )
 {
 	uuid_t 	*uuid;
 	uuid_t 	*uuid_ns;
@@ -38,4 +38,10 @@ dboid_t createDBoid( char *name )
 	
 	return str;
 	
+}
+
+void dboidCopy(dboid_t dboid1, dboid_t dboid2, unsigned int size )
+{
+	strncpy(dboid1, dboid2, size - 1 );
+	dboid1[ size - 1 ] = '\0';
 }

@@ -3,8 +3,9 @@
 #include "Config.h"
 #include "Debug.h"
 #include "Network.h"
+#include "Dboid.h"
 
-void propagate( MethodCallObject *methodCallObject, GSList *replicas )
+void propagate( MethodCallObject *methodCallObject, GSList *replicas, dboid_t dboid )
 {
 	PropagationPackage ppack;
 	
@@ -12,6 +13,7 @@ void propagate( MethodCallObject *methodCallObject, GSList *replicas )
 	ppack.size = sizeof( PropagationPackage );
 	ppack.pack_type = PACK_PROP;
 	ppack.replica_id = __conf.id;
+	dboidCopy( ppack.dboid, dboid, sizeof( ppack.dboid ) );
 	
 	ppack.methodCallObject = *methodCallObject;
 	ppack.generationNumber = methodCallObject->generationNumber;

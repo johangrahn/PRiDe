@@ -100,7 +100,7 @@ void stabilize( GHashTable *objectStore, GHashTable *methods, Generation *genera
 	
 }
 
-int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dbid )
+int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dboid )
 {
 	StabilizationPackage pack;
 	
@@ -108,7 +108,7 @@ int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t 
 	pack.pack_type = PACK_STAB;
 	pack.replicaId = replicaId;
 	pack.generationNumber = generation;
-	strncpy( pack.dboid, dbid, sizeof( pack.dboid ) );
+	dboidCopy( pack.dboid, dboid, sizeof( pack.dboid ) );
 
 	networkSendDataToAll( replicas, &pack, pack.size );
 	

@@ -74,7 +74,7 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	__DEBUG( "Added generation %d for method <%s>", conflictSet->maxGeneration, methodCallObject->methodName );
 
 
-	propagate( methodCallObject, __conf.replicas );
+	propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
 	
 	/* Notify propagator that the generation needs to be propagated */
 	//EventQueue_push( conflictSet->propEventQueue, conflictSet );
@@ -139,7 +139,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;	
 						
 						/* Send stabilization message to all other replicas */
-						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, "Test" );
+						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 						break;			
 					}
 					else {
@@ -147,7 +147,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_NO_UPDATE;
 						
 						/* Send stabilization message to all other replicas */
-						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, "Test" );
+						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
 					}
 				
 			
