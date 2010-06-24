@@ -132,6 +132,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			
 					/* Check if this generation is the required generation for the remote update */
 					if( conflictSet->maxGeneration == sourceGeneration ) {
+						
 						__DEBUG( "Create new generation(s) for remote update" );
 
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_UPDATE;
@@ -142,6 +143,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						break;			
 					}
 					else {
+						/* Set that the replica doesn't have any update on this generation */
+						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_NO_UPDATE;
+						
 						/* Send stabilization message to all other replicas */
 						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, "Test" );
 					}

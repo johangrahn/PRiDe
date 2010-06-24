@@ -42,6 +42,7 @@ typedef struct _PropagationPackage {
 	int replica_id;
 	MethodCallObject methodCallObject;
 	int generationNumber;
+	char dboid[40];
 	
 } PropagationPackage;
 

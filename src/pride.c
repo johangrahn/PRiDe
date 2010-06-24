@@ -60,7 +60,7 @@ void pride_sighandler(int sig);
 int main( int argc, char **argv )
 {
 	MethodCallObject methodCallObject;
-	
+	ConflictSet *conflictSet;
 	signal(SIGINT, pride_sighandler);
 	signal(SIGTERM, pride_sighandler);
 	
@@ -76,8 +76,13 @@ int main( int argc, char **argv )
 	}
 	
 	
+	conflictSet = malloc( sizeof(ConflictSet) );
 	
-	ConflictSet_initVars( &__conf.conflictSet, 10 );
+	ConflictSet_initVars( conflictSet, 10 );
+	
+	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
+	g_hash_table_insert( __conf.conflictSets, "abc123", conflictSet );
+	
 	
 	pthread_create( &__conf.receiver, NULL, receiverThread, NULL );
 
@@ -95,12 +100,12 @@ int main( int argc, char **argv )
 		methodCallObject.params[0].paramType = paramTypeInt;
 		methodCallObject.params[0].paramData.intData = 2;
 
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( &__conf.conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
+		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 	
 	}
 	

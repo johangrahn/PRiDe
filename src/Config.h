@@ -40,7 +40,13 @@ typedef struct _Config {
 	pthread_cond_t listenDoneCondition; /* Condition that happens when a listen socket has been established */
 	pthread_mutex_t listenMutex;
 	
+	/* This is depricated and should not be used */
 	ConflictSet conflictSet;
+	
+	/* This stores all conflict sets with the dboid as key and the conflict set as value */
+	GHashTable *conflictSets;
+	
+	
 } Config;
 
 /* Global variable for the configuration */

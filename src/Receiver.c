@@ -36,7 +36,7 @@
 #include <fcntl.h>
 
 /* Unpack the packed data from the buffer into packages  */
-void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSet );
+void recevierHandleData( char *dataBuffer, int dataSize );
 
 void* receiverThread(void *data)
 {	
@@ -108,7 +108,7 @@ void* receiverThread(void *data)
 						numbytes = recv(i, buffer, sizeof( buffer ), 0 );
 						if(numbytes > 0 ) {
 							
-							recevierHandleData( buffer, numbytes, &__conf.conflictSet );
+							recevierHandleData( buffer, numbytes );
 													
 						}
 						else if( numbytes == 0) {
@@ -129,7 +129,7 @@ void* receiverThread(void *data)
 	
 }
 
-void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSet )
+void recevierHandleData( char *dataBuffer, int dataSize )
 {
 	char 					*bufferPointer;		/* Pointer to the current data */
 	int 					dataLeft; 			/* How much bytes there are left to handle */
@@ -137,6 +137,7 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 	Package					*dataPackage;
 	PropagationPackage 		*propagationPackage;
 	StabilizationPackage	*stabilizationPackage;
+	ConflictSet				*conflictSet;
 	
 	/* Set the pointer to the start */
 	bufferPointer = dataBuffer;
@@ -157,12 +158,18 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 		/* Detect what type of package it is */
 		switch( dataPackage->pack_type ) {
 			
+			/* The package is a propagation package */
 			case PACK_PROP: 
 				propagationPackage = (PropagationPackage*) bufferPointer;
 				__DEBUG( "Got Propagation package from replica %d with %d bytes", propagationPackage->replica_id, dataPackageSize );
 			//	__DEBUG( "Database OID: %s, method name: %s", 
 			//		propagationPackage->methodCallObject.databaseObjectId, 
 			//		propagationPackage->methodCallObject.methodName );
+				
+				
+				/* Get the conflict set for the update */
+				conflictSet = g_hash_table_lookup( __conf.conflictSets, propagationPackage->dboid );
+				
 					
 				ConflictSet_insertRemoteUpdate( conflictSet, 
 					&propagationPackage->methodCallObject, 
@@ -170,9 +177,13 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 					propagationPackage->generationNumber );
 			break;
 			
+			/* It is a stabilization package */
 			case PACK_STAB: 
 				stabilizationPackage = (StabilizationPackage *) bufferPointer;
 				__DEBUG( "Got stabilization package from replica %d with %d bytes", stabilizationPackage->replicaId, dataPackageSize );
+				
+				/* Get the conflict set for the update */
+				conflictSet = g_hash_table_lookup( __conf.conflictSets, propagationPackage->dboid );
 				
 				ConflictSet_updateStabilization( conflictSet, stabilizationPackage->generationNumber, stabilizationPackage->replicaId);
 				
