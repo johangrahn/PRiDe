@@ -19,7 +19,9 @@
 #include "ConflictSet.h"
 #include "EventQueue.h"
 #include "Debug.h"
-#include "propagate.h"
+#include "Propagate.h"
+#include "Stabilization.h"
+
 #include <stdlib.h>
 
 void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
@@ -134,10 +136,16 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_UPDATE;
 						conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;	
-					
+						
+						/* Send stabilization message to all other replicas */
+						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, "Test" );
 						break;			
 					}
-					
+					else {
+						/* Send stabilization message to all other replicas */
+						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, "Test" );
+					}
+				
 			
 				}
 			}

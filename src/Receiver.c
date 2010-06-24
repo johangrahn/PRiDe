@@ -104,7 +104,7 @@ void* receiverThread(void *data)
 						
 					}
 					else {					
-						__DEBUG( "Incoming data" );
+						//__DEBUG( "Incoming data" );
 						numbytes = recv(i, buffer, sizeof( buffer ), 0 );
 						if(numbytes > 0 ) {
 							
@@ -160,9 +160,9 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 			case PACK_PROP: 
 				propagationPackage = (PropagationPackage*) bufferPointer;
 				__DEBUG( "Got Propagation package from replica %d with %d bytes", propagationPackage->replica_id, dataPackageSize );
-				__DEBUG( "Database OID: %s, method name: %s", 
-					propagationPackage->methodCallObject.databaseObjectId, 
-					propagationPackage->methodCallObject.methodName );
+			//	__DEBUG( "Database OID: %s, method name: %s", 
+			//		propagationPackage->methodCallObject.databaseObjectId, 
+			//		propagationPackage->methodCallObject.methodName );
 					
 				ConflictSet_insertRemoteUpdate( conflictSet, 
 					&propagationPackage->methodCallObject, 

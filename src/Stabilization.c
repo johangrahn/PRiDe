@@ -29,6 +29,7 @@
 
 void* stabilizatorThreadProcess( void *data )
 {
+	
 	ConflictSet *conflictSet;
 	StabilizatorThreadData *threadData;
 	Generation *generation;
@@ -64,6 +65,12 @@ void* stabilizatorThreadProcess( void *data )
 
 void stabilize( GHashTable *objectStore, GHashTable *methods, Generation *generation )
 {
+	
+	// Ogly hack to not clean this code :)
+	return ;
+	
+	
+	
 	MethodCallObject 			*update;
 	void 						*object;
 	ConflictResolutionPolicy 	policy;
@@ -98,6 +105,7 @@ int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t 
 	StabilizationPackage pack;
 	
 	pack.size = sizeof( StabilizationPackage );
+	pack.pack_type = PACK_STAB;
 	pack.replicaId = replicaId;
 	pack.generationNumber = generation;
 	strncpy( pack.dboid, dbid, sizeof( pack.dboid ) );
