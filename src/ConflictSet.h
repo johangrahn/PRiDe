@@ -76,6 +76,10 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 
 /* Inserts a remote update that have been recevied from a propagation package */
 void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject, int sourceReplicaId, int sourceGeneration );
+
+/* Updates the conflict set with stabilization information */
+void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNumber, int replicaId );
+
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );
 

@@ -163,6 +163,20 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		sourceReplicaId, conflictSet->maxGeneration, generationPosition );
 }
 
+void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNumber, int replicaId )
+{
+	int generationPosition;
+	
+	generationPosition = ConflictSet_getGenerationPosition( conflictSet, generationNumber );
+	if( generationPosition != -1 ) {
+		conflictSet->generations[generationPosition].generationType[replicaId] = GEN_NO_UPDATE;
+	
+		__DEBUG( "Added stabilization information for generation %d from replica %d", generationNumber, replicaId );
+	}
+	else {
+		__ERROR( "Failed to find generation position for generation %d in function ConflictSet_getGenerationPosition", generationNumber );
+	}
+}
 
 int ConflictSet_isEmpty( ConflictSet *conflictSet )
 {

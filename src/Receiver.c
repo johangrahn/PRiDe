@@ -173,6 +173,9 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 			case PACK_STAB: 
 				stabilizationPackage = (StabilizationPackage *) bufferPointer;
 				__DEBUG( "Got stabilization package from replica %d with %d bytes", stabilizationPackage->replicaId, dataPackageSize );
+				
+				ConflictSet_updateStabilization( conflictSet, stabilizationPackage->generationNumber, stabilizationPackage->replicaId);
+				
 			break;
 			
 			default:
@@ -186,8 +189,7 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 		/* Counting down how much data is left to analyze */
 		dataLeft = dataLeft - dataPackageSize;
 		
-		__DEBUG( "Remaining bytes: %d", dataLeft );
-		
+		__DEBUG( "Remaining bytes: %d", dataLeft );	
 	}
 	
 	
