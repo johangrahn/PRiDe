@@ -172,7 +172,7 @@ void recevierHandleData( char *dataBuffer, int dataSize, ConflictSet *conflictSe
 			
 			case PACK_STAB: 
 				stabilizationPackage = (StabilizationPackage *) bufferPointer;
-				__DEBUG( "Got stabilization package from replica %d with %d bytes", stabilizationPackage->replica_id, dataPackageSize );
+				__DEBUG( "Got stabilization package from replica %d with %d bytes", stabilizationPackage->replicaId, dataPackageSize );
 			break;
 			
 			default:

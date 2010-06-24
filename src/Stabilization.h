@@ -22,6 +22,7 @@
 #include <glib.h>
 #include "Generation.h"
 #include "ConflictSet.h"
+#include "Dboid.h"
 
 /* Data that the stabilizator threads needs when starting up */
 typedef struct {
@@ -29,7 +30,6 @@ typedef struct {
 	GHashTable *objectStore;
 	ConflictSet *conflictSet;
 	EventQueue *stabEventQueue;
-	pthread_barrier_t *syncBarrier;
 } StabilizatorThreadData;
 
 
@@ -45,4 +45,6 @@ void (*prideMethodPrototype)(void *object, Parameter *params, int paramSize);
  */
 void stabilize( GHashTable *objects, GHashTable *methods, Generation *generation );
 
+int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dbid );
+	
 #endif

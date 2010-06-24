@@ -42,7 +42,16 @@ int networkCreateTCPServer( int port );
 
 void networkSetNonBlockingMode( int socket );
 
+
+/* 
+ * Sends the data with TCP to the replicas 
+ *
+ * If replicas doesn't answer, wait for 25 ms, and try again
+ */
+void networkSendDataToAll( GSList *replicas, void *data, int dataSize );
+
 /* Sends all data */
 int networkSendAll( int socket, void *data, int length );
+
 
 #endif 

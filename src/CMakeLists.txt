@@ -5,7 +5,7 @@ ADD_LIBRARY( common STATIC
 	MethodCallObject.c
 	ConflictSet.c
 #	ConflictResolution.c
-#	Stabilization.c
+	Stabilization.c
 	Generation.c
 	EventQueue.c
 	Receiver.c

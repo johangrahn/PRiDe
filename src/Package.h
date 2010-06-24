@@ -50,8 +50,8 @@ typedef struct _StabilizationPackage {
 	enum package_type pack_type;
 	
 	/* Data */
-	int replica_id;
-	int generation_number;	
+	int replicaId;
+	int generationNumber;	
 	char dboid[40];
 	
 } StabilizationPackage;

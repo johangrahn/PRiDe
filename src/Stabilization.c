@@ -20,8 +20,9 @@
 #include "ConflictResolution.h"
 #include "MethodCallObject.h"
 #include "EventQueue.h"
-
+#include "Package.h"
 #include "Debug.h"
+#include "Network.h"
 
 #include <string.h>
 #include <unistd.h>
@@ -33,9 +34,6 @@ void* stabilizatorThreadProcess( void *data )
 	Generation *generation;
 
 	threadData = (StabilizatorThreadData*) data;
-
-	/* Wait for the other threads to sync up */
-	pthread_barrier_wait( threadData->syncBarrier ); 
 	
 	while( 1 ) {
 
@@ -47,13 +45,13 @@ void* stabilizatorThreadProcess( void *data )
 		/* Fetch the conflict set that sended the event */
 		conflictSet = EventQueue_pop( threadData->stabEventQueue );
 		
-		_DEBUG( conflictSet->logFile, "Got signal from conflict set\n" );
+		__DEBUG( "Got signal from conflict set" );
 
 		
 		/* Fetch each generation that is complete and stabilize it */
 		while( (generation = ConflictSet_popGeneration( conflictSet )) != NULL) {
 			stabilize( threadData->objectStore, threadData->methods, generation );
-			_DEBUG( conflictSet->logFile, "Stabilized generation %d\n", generation->number );
+			__DEBUG( "Stabilized generation %d", generation->number );
 
 			/* Remove old generation information */
 			Generation_clear( generation );
@@ -95,3 +93,16 @@ void stabilize( GHashTable *objectStore, GHashTable *methods, Generation *genera
 	
 }
 
+int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dbid )
+{
+	StabilizationPackage pack;
+	
+	pack.size = sizeof( StabilizationPackage );
+	pack.replicaId = replicaId;
+	pack.generationNumber = generation;
+	strncpy( pack.dboid, dbid, sizeof( pack.dboid ) );
+
+	networkSendDataToAll( replicas, &pack, pack.size );
+	
+	return 1;
+}
