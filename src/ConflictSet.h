@@ -80,6 +80,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 /* Updates the conflict set with stabilization information */
 void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNumber, int replicaId );
 
+/* Checks if the generation at the given position is complete */
+int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition );
+
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );
 

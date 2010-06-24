@@ -178,6 +178,18 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	}
 }
 
+int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition )
+{
+	int it;
+	for(it = 0; it < PRIDE_NUM_REPLICAS; it++) {
+		if( conflictSet->generations[generationPosition].generationType[it] == GEN_NONE ) {
+			return 0;
+		} 
+	}
+	
+	return 1;
+}
+
 int ConflictSet_isEmpty( ConflictSet *conflictSet )
 {
 	if(conflictSet->minGeneration > conflictSet->maxGeneration ||
