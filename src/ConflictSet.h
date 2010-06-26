@@ -54,12 +54,8 @@ typedef struct _ConflictSet {
 	/* Stores the dboid that is used for the conflict set */
 	char dboid[40];
 	
-	/*
-	 * Condition variable that signals when a gneration is complete, 
-	 * meaning that it is ready to be stabilized 
-	 */
-	pthread_mutex_t onCompleteMutex;
-	pthread_cond_t onCompleteCondition;
+	/* A mutex lock that is used for handling multiple threads accessing the conflict set */
+	pthread_mutex_t writeLock;
 
 	/* Holds a pointer to the stabilization event queue */
 	EventQueue *stabEventQueue;

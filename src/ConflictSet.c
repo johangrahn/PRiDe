@@ -30,9 +30,8 @@ void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 	conflictSet->minPosition = conflictSet->maxPosition = -1;
 	conflictSet->minGeneration = conflictSet->maxGeneration = -1;
 
-	/* Setup condition variables */
-	pthread_cond_init( &conflictSet->onCompleteCondition, NULL );
-	pthread_mutex_init( &conflictSet->onCompleteMutex, NULL );
+	/* Setup mutex */
+	pthread_mutex_init( &conflictSet->writeLock, NULL );
 
 	conflictSet->numberOfGenerations = numberOfGenerations;
 }
