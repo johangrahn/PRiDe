@@ -97,6 +97,10 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 	
 	generationPosition = -1;
 	
+	
+	/* Lock the structure */
+	pthread_mutex_lock( &conflictSet->writeLock );
+	
 	if( ConflictSet_isEmpty( conflictSet ) ) {
 		__DEBUG( "No generation exists, creating a new one" );
 		/* No generation exists, creating a new one */
@@ -168,6 +172,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		}
 		
 	}
+	
+	/* Unlock the structure */
+	pthread_mutex_unlock( &conflictSet->writeLock );
 	
 	__DEBUG( "Adding remote update from replica %d on generation %d on position %d", 
 		sourceReplicaId, conflictSet->maxGeneration, generationPosition );
