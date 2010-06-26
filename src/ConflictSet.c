@@ -39,6 +39,9 @@ void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject)
 {
 
+	/* Lock the structures */
+	pthread_mutex_lock( &conflictSet->writeLock );
+	
 	/* Check if there are any generations existing */
 	if( conflictSet->maxPosition == -1 ) {
 
@@ -74,6 +77,10 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 
 
 	propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
+	
+	/* Unlock the structure */
+	pthread_mutex_unlock( &conflictSet->writeLock );
+	
 	
 	/* Notify propagator that the generation needs to be propagated */
 	//EventQueue_push( conflictSet->propEventQueue, conflictSet );
