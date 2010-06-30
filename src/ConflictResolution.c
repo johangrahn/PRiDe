@@ -23,6 +23,8 @@ void* conflictResolutionThread( void *data)
 {
 	EventQueue *completeGenerationsQueue;
 	ConflictSet *conflictSet;
+	Generation *generation;
+	MethodCallObject *methodCallObject;
 	
 	completeGenerationsQueue = (EventQueue*) data;
 	
@@ -35,6 +37,15 @@ void* conflictResolutionThread( void *data)
 		conflictSet = EventQueue_pop( completeGenerationsQueue );
 		
 		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
+		
+		/* Fetch the generation that is complete */ 
+		generation = ConflictSet_popGeneration( conflictSet );
+		
+		if( generation != NULL) {
+			__DEBUG( "Performing conflict resolution on generation %d", generation->number );
+		
+			methodCallObject = firstPolicy( generation );
+		}
 	}
 	
 	
@@ -44,6 +55,6 @@ void* conflictResolutionThread( void *data)
 MethodCallObject* firstPolicy(Generation *generation)
 {
 	MethodCallObject *update;
-	update = generation->generationData[0].methodCallObject;
+	update = generation->generationData[1].methodCallObject;
 	return update;
 }
