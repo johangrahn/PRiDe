@@ -46,7 +46,7 @@
 #include "Package.h"
 #include "Receiver.h"
 #include "Propagate.h"
-
+#include "ConflictResolution.h"
 #include "ConflictSet.h"
 #include "DBoid.h"
 
@@ -63,6 +63,7 @@ int main( int argc, char **argv )
 	MethodCallObject methodCallObject;
 	ConflictSet *conflictSet;
 	dboid_t dboid;
+	EventQueue completeGenerationsQueue;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -71,6 +72,7 @@ int main( int argc, char **argv )
 	pthread_cond_init( &__conf.listenDoneCondition, NULL );
 	pthread_mutex_init(  &__conf.listenMutex, NULL );
 	
+	EventQueue_init( &completeGenerationsQueue );
 	
 	if( pride_handle_args( argc, argv ) == 0 ) {
 		__ERROR( "Not enough arguments supplied" );
@@ -79,11 +81,13 @@ int main( int argc, char **argv )
 
 	}
 	
-	dboid = dboidCreate("object1");
+	dboid = dboidCreate( "object1" );
 	
 	conflictSet = malloc( sizeof(ConflictSet) );
 	
 	ConflictSet_initVars( conflictSet, 10 );
+	conflictSet->stabEventQueue = &completeGenerationsQueue;
+	
 	dboidCopy( conflictSet->dboid, dboid, sizeof( conflictSet->dboid ) );
 	
 	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
@@ -91,7 +95,7 @@ int main( int argc, char **argv )
 	
 	
 	pthread_create( &__conf.receiver, NULL, receiverThread, NULL );
-
+	pthread_create( &__conf.conflictResolutionThreadId, NULL, conflictResolutionThread, &completeGenerationsQueue );
 
 	/* Waiting for the listen port to be up-and-running */
 	pthread_mutex_lock( &__conf.listenMutex );
@@ -121,7 +125,7 @@ int main( int argc, char **argv )
 	}
 
 	pthread_join( __conf.receiver, NULL);
-	
+	pthread_join(__conf.conflictResolutionThreadId, NULL);
 	return 0;
 }
 
@@ -230,6 +234,7 @@ void pride_cleanup()
 
 	/* Close all application threads */
 	pthread_cancel( __conf.receiver );
+	pthread_cancel( __conf.conflictResolutionThreadId );
 
 	/* Closing down sockets */
 	close( __conf.lsocket );

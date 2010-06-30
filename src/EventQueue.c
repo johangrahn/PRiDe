@@ -1,5 +1,6 @@
 #include "EventQueue.h"
 #include "ConflictSet.h"
+#include "Debug.h"
 
 void EventQueue_init( EventQueue *eventQueue )
 {

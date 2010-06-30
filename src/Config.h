@@ -35,6 +35,7 @@ typedef struct _Config {
 	int 		lport;		/* The port to listen for packages */
 	int			lsocket;	/* The socket that the server listens on */
 	pthread_t 	receiver;	/* Thread ID for the receiver */
+	pthread_t 	conflictResolutionThreadId;
 	fd_set 		master;		/* Structure for all TCP sockets that are connected */
 	
 	pthread_cond_t listenDoneCondition; /* Condition that happens when a listen socket has been established */

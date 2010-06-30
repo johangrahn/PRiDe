@@ -4,7 +4,7 @@ ADD_LIBRARY( common STATIC
 #	Transaction.c
 	MethodCallObject.c
 	ConflictSet.c
-#	ConflictResolution.c
+	ConflictResolution.c
 	Stabilization.c
 	Generation.c
 	EventQueue.c

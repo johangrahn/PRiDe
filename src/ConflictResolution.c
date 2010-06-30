@@ -17,6 +17,29 @@
  */
 
 #include "ConflictResolution.h"
+#include "Debug.h"
+
+void* conflictResolutionThread( void *data)
+{
+	EventQueue *completeGenerationsQueue;
+	ConflictSet *conflictSet;
+	
+	completeGenerationsQueue = (EventQueue*) data;
+	
+	__DEBUG( "Starting conflict resolution thread" );
+	
+	while( 1 ) {
+		/* Listen for new complete generation from all conflict sets */
+		EventQueue_listen( completeGenerationsQueue );
+		
+		conflictSet = EventQueue_pop( completeGenerationsQueue );
+		
+		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
+	}
+	
+	
+	return NULL;
+}
 
 MethodCallObject* firstPolicy(Generation *generation)
 {

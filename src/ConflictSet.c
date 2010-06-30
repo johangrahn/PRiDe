@@ -67,8 +67,8 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	/* Add method call to the conflict set */
 	Generation_init( &conflictSet->generations[conflictSet->maxPosition] );
 
-	conflictSet->generations[conflictSet->maxPosition].generationType[0] = GEN_UPDATE;
-	conflictSet->generations[conflictSet->maxPosition].generationData[0].methodCallObject = methodCallObject;
+	conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_UPDATE;
+	conflictSet->generations[conflictSet->maxPosition].generationData[__conf.id].methodCallObject = methodCallObject;
 	conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;	
 
 	methodCallObject->generationNumber = conflictSet->maxGeneration;
@@ -114,6 +114,14 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;
 		conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 		
+		/* Send stabilization message to all other replicas */
+		sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
+			
+		if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
+			__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
+			EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+		}
+		
 		generationPosition = 0;
 	}
 	else { /* The conflict set is not empty */
@@ -147,15 +155,26 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_UPDATE;
 						conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;	
+						conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 						
+						/* Set that the replica doesn't have any update on this generation */
+						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_NO_UPDATE;
+							
 						/* Send stabilization message to all other replicas */
 						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
+						
+						
+						if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
+							__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
+							EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+						}
+						
 						break;			
 					}
 					else {
 						/* Set that the replica doesn't have any update on this generation */
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_NO_UPDATE;
-						
+						conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 						/* Send stabilization message to all other replicas */
 						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
 					}
@@ -189,6 +208,11 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		conflictSet->generations[generationPosition].generationType[replicaId] = GEN_NO_UPDATE;
 	
 		__DEBUG( "Added stabilization information for generation %d from replica %d", generationNumber, replicaId );
+		
+		if( ConflictSet_checkGenerationComplete( conflictSet, generationPosition ) ) {
+			__DEBUG( "Generation %d is complete", generationNumber	 );
+			EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+		}
 	}
 	else {
 		__ERROR( "Failed to find generation position for generation %d in function ConflictSet_getGenerationPosition", generationNumber );
@@ -197,9 +221,14 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 
 int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition )
 {
-	int it;
+	int it;	
+	GenerationType type;
+	
 	for(it = 0; it < PRIDE_NUM_REPLICAS; it++) {
-		if( conflictSet->generations[generationPosition].generationType[it] == GEN_NONE ) {
+		
+		type = conflictSet->generations[generationPosition].generationType[it];
+		
+		if( type == GEN_NONE ) {
 			return 0;
 		} 
 	}
@@ -260,9 +289,16 @@ void ConflictSet_createNewGeneration( ConflictSet *conflictSet )
 
 Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 {
-	Generation *generation;
+	Generation *generation, *generationCopy;
+	
+	/* Lock the structure */
+	pthread_mutex_lock( &conflictSet->writeLock );
 	
 	if( ConflictSet_isEmpty( conflictSet ) ) {
+		
+		/* Unlock the structure */
+		pthread_mutex_unlock( &conflictSet->writeLock );
+		
 		return NULL;
 	}
 
@@ -279,13 +315,21 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 		/* Increase the counter for the oldest generation number */
 		conflictSet->minGeneration++;
 		
-		/* Creates a replica of the generation so that the data can be send to 
+		/* Creates a copy of the generation so that the data can be send to 
 		 * the stabilizator 
 		 */
-		return Generation_clone( generation );
+		generationCopy = Generation_clone( generation );
+		
+		/* Unlock the structure */
+		pthread_mutex_unlock( &conflictSet->writeLock );
+		
+		return generationCopy;
 	
 	}
 	else {
+		/* Unlock the structure */
+		pthread_mutex_unlock( &conflictSet->writeLock );
+		
 		return NULL;
 	}
 }

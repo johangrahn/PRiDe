@@ -22,7 +22,7 @@
 #include "MethodCallObject.h"
 
 #ifndef PRIDE_NUM_REPLICAS
-	#define PRIDE_NUM_REPLICAS 1
+	#define PRIDE_NUM_REPLICAS 2
 #endif
 /* 
  * Represents the different types of data

@@ -24,6 +24,13 @@
 
 #include <stdlib.h>
 
+
+/* 
+ * Thread that listens for complete generation and 
+ * perform a conflict resolution on that generation 
+ */
+void* conflictResolutionThread( void *data);
+
 /* Prototype function for any conflict resolution policies */
 typedef MethodCallObject* (*ConflictResolutionPolicy)( Generation *generation );
 
