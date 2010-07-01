@@ -101,7 +101,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 	/* Lock the structure */
 	pthread_mutex_lock( &conflictSet->writeLock );
 	
-	if( ConflictSet_isEmpty( conflictSet ) ) {
+	if( conflictSet->maxPosition == -1 ) {
 		__DEBUG( "No generation exists, creating a new one" );
 		/* No generation exists, creating a new one */
 		conflictSet->maxPosition = 0;
@@ -114,6 +114,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		conflictSet->generations[conflictSet->maxPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;
 		conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 		
+		/* Set that the replica doesn't have any update on this generation */
+		conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_NO_UPDATE;
+			
 		/* Send stabilization message to all other replicas */
 		sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 			
@@ -136,6 +139,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			conflictSet->generations[generationPosition].generationData[sourceReplicaId].methodCallObject = methodCallObject;
 			conflictSet->generations[generationPosition].number = conflictSet->maxGeneration;
 			
+			/* Set that the replica doesn't have any update on this generation */
+			conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_NO_UPDATE;
+				
 			if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
 				__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
 				EventQueue_push( conflictSet->stabEventQueue, conflictSet );
@@ -284,6 +290,8 @@ int ConflictSet_getGenerationPosition( ConflictSet *conflictSet, int generation 
 		generationPosition = (generationPosition + 1) % conflictSet->numberOfGenerations;
 	}
 	
+	__ERROR("Failed in getGenerationPosition: min=%d,max=%d,gen=%d", conflictSet->minGeneration, conflictSet->maxGeneration, generation );
+	
 	return -1;
 }
 
@@ -307,6 +315,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	
 	if( ConflictSet_isEmpty( conflictSet ) ) {
 		
+		__ERROR( "popGeneration(): Conflict set is empty!" );
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
 		
@@ -338,6 +347,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	
 	}
 	else {
+		__ERROR( "popGeneration(): Generation %d is not complete", generation->number );
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
 		
