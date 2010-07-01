@@ -18,6 +18,7 @@
 
 #include "ConflictResolution.h"
 #include "Debug.h"
+#include "Generation.h"
 
 void* conflictResolutionThread( void *data)
 {
@@ -45,6 +46,11 @@ void* conflictResolutionThread( void *data)
 			__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
 			methodCallObject = firstPolicy( generation );
+			
+			free( generation );
+		}
+		else {
+			__DEBUG("No geneations to resolve");
 		}
 	}
 	
@@ -54,7 +60,14 @@ void* conflictResolutionThread( void *data)
 
 MethodCallObject* firstPolicy(Generation *generation)
 {
-	MethodCallObject *update;
-	update = generation->generationData[1].methodCallObject;
-	return update;
+	MethodCallObject 	*update;
+	int 				it;
+	
+	/* Fetches the the update from the first replica that has an update */
+	for (it = 0; it < PRIDE_NUM_REPLICAS; it++) {
+		if( generation->generationType[it] == GEN_UPDATE )
+			return generation->generationData[it].methodCallObject;
+	}
+	
+	return NULL;
 }

@@ -161,7 +161,8 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 			/* The package is a propagation package */
 			case PACK_PROP: 
 				propagationPackage = (PropagationPackage*) bufferPointer;
-				__DEBUG( "Got Propagation package from replica %d with dboid %s with %d bytes", propagationPackage->replica_id, propagationPackage->dboid, dataPackageSize );
+				__DEBUG( "Got Propagation package from replica %d with dboid %s on generation %d with %d bytes", propagationPackage->replica_id, propagationPackage->dboid, 
+				propagationPackage->methodCallObject.generationNumber, dataPackageSize );
 			//	__DEBUG( "Database OID: %s, method name: %s", 
 			//		propagationPackage->methodCallObject.databaseObjectId, 
 			//		propagationPackage->methodCallObject.methodName );
@@ -180,7 +181,8 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 			/* It is a stabilization package */
 			case PACK_STAB: 
 				stabilizationPackage = (StabilizationPackage *) bufferPointer;
-				__DEBUG( "Got stabilization package from replica %d with dboid %s with %d bytes", stabilizationPackage->replicaId, stabilizationPackage->dboid,  dataPackageSize );
+				__DEBUG( "Got stabilization package from replica %d with dboid %s on generation %d with %d bytes", stabilizationPackage->replicaId, stabilizationPackage->dboid,  
+				stabilizationPackage->generationNumber, dataPackageSize );
 				
 				/* Get the conflict set for the update */
 				conflictSet = g_hash_table_lookup( __conf.conflictSets, stabilizationPackage->dboid );

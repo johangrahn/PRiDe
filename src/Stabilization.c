@@ -110,6 +110,8 @@ int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t 
 	pack.generationNumber = generation;
 	dboidCopy( pack.dboid, dboid, sizeof( pack.dboid ) );
 
+	__DEBUG( "Sending stabilization message for generation %d", generation );
+	 
 	networkSendDataToAll( replicas, &pack, pack.size );
 	
 	return 1;
