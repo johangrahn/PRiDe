@@ -20,7 +20,7 @@
 #define __PROPAGATE_H_
 
 #include "MethodCallObject.h"
-#include "Dboid.h"
+#include "DBoid.h"
 #include <glib.h>
 
 

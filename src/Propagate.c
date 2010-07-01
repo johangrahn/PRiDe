@@ -3,7 +3,7 @@
 #include "Config.h"
 #include "Debug.h"
 #include "Network.h"
-#include "Dboid.h"
+#include "DBoid.h"
 
 void propagate( MethodCallObject *methodCallObject, GSList *replicas, dboid_t dboid )
 {

@@ -22,7 +22,7 @@
 #include <glib.h>
 #include "Generation.h"
 #include "ConflictSet.h"
-#include "Dboid.h"
+#include "DBoid.h"
 
 /* Data that the stabilizator threads needs when starting up */
 typedef struct {

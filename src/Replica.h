@@ -23,7 +23,7 @@
 	#define REPLICA_HOST_MAX 30
 #endif
 
-#include "config.h"
+#include "Config.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
