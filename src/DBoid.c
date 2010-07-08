@@ -18,6 +18,8 @@
 
 #include "DBoid.h"
 
+#include <string.h>
+
 dboid_t dboidCreate( char *name )
 {
 	uuid_t 	*uuid;

@@ -21,6 +21,7 @@ ADD_LIBRARY( common STATIC
 
 LINK_DIRECTORIES(
 	${GLIB_LIBRARY_DIRS}
+	$ENV{HOME}/lib/
 )
 
 ADD_EXECUTABLE( pride pride.c )

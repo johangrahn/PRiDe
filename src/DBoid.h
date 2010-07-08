@@ -19,9 +19,8 @@
 #ifndef __DBOID_H_
 #define __DBOID_H_
 
-#ifndef _UUID_T 
-	#include <ossp/uuid.h> 
-#endif 
+#include <uuid.h>
+	
 
 //#include <ossp/uuid.h>
 

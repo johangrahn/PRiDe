@@ -16,7 +16,7 @@
  * PRiDe. If not, see http://www.gnu.org/licenses/
  */
 
-#include "config.h"
+#include "Config.h"
 
 #ifndef NDEBUG
 	#define __DEBUG(fmt, ...) fprintf (__conf.log, "[%d] " fmt "\n", __conf.id, ##__VA_ARGS__ ); fflush( __conf.log )
