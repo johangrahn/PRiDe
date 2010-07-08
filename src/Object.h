@@ -21,6 +21,18 @@
 #define _OBJECT_H_
 
 #include "Parameter.h"
+
+#include <stdlib.h>
+
+
+/*
+ * All objects needs to have the size member at first position 
+ * so that the Object Storage can store the object correctly 
+ */
+typedef struct {
+	size_t size;
+} ObjectBase;
+
 /*
  * This structure represents a example object 
  * that is can be replicated 
@@ -30,7 +42,8 @@
  * These methods have the _pride_ name scheme 
  */
 typedef struct {
-
+	size_t size;
+	
 	int propertyA,
 		propertyB;
 

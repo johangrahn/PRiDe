@@ -26,7 +26,7 @@
 #include <sys/time.h>
 
 #include "ConflictSet.h"
-
+#include "ObjectStore.h"
 typedef struct _Config {
 	int 		id; 		/* Id of the replica */
 	int 		writer;		/* Sets to 1 if replica is writer */
@@ -47,6 +47,8 @@ typedef struct _Config {
 	/* This stores all conflict sets with the dboid as key and the conflict set as value */
 	GHashTable *conflictSets;
 	
+	/* The object store for all stable objects */
+	ObjectStore *objectStore;
 	
 } Config;
 

@@ -16,27 +16,26 @@
  * PRiDe. If not, see http://www.gnu.org/licenses/
  */
 
-#include "Object.h"
-#include "Debug.h"
+#ifndef __OBJECT_STORE_H_
+#define __OBJECT_STORE_H_
 
-void Object_increaseA( Object *object, int value )
-{
-	__DEBUG(" Increased value by %d", value );
-	object->propertyA += value;
-}
+#include <db.h>
+#include "DBoid.h"
+typedef struct {
+	
+	/* Handler for BerkeleyDB storage */
+	DB_ENV 	*environment;
+	DB 		*database;
+	
+} ObjectStore;
 
-void Object_decreaseA( Object *object, int value )
-{
-	object->propertyA -= value;
-}
+/* Creates the database (in memory) and sets up the environment */
+void ObjectStore_init( ObjectStore *objectStore );
 
+/* Stores the object inside the datbase */
+void ObjectStore_put( ObjectStore *objectStore, dboid_t dboid, void *object, size_t objectSize );
 
-void Object_increaseA_resolve( void  *object, Parameter *params, int paramSize )
-{
-	Object_increaseA(object, params[0].paramData.intData );
-}
+/* Fetches the object based on it's dboid */
+void ObjectStore_fetch( ObjectStore *objectStore, dboid_t dboid, void **object, size_t objectSize );
+#endif
 
-void Object_decreaseA_resolve( void  *object, Parameter *params, int paramSize )
-{
-	Object_decreaseA(object, params[0].paramData.intData );
-}

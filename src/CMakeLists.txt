@@ -1,5 +1,6 @@
 ADD_LIBRARY( common STATIC
-#	Object.c
+	Object.c
+	ObjectStore.c
 #	OptimisticDb.c
 #	Transaction.c
 	MethodCallObject.c

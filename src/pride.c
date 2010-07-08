@@ -49,6 +49,8 @@
 #include "ConflictResolution.h"
 #include "ConflictSet.h"
 #include "DBoid.h"
+#include "Object.h"
+#include "ObjectStore.h"
 
 void pride_usage();
 int pride_handle_args( int argc, char **argv );
@@ -60,14 +62,19 @@ void pride_error(int sig) { __ERROR("SIGSEGV");	exit(1);}
 
 int main( int argc, char **argv )
 {
-	MethodCallObject methodCallObject;
-	ConflictSet *conflictSet;
-	dboid_t dboid;
-	EventQueue completeGenerationsQueue;
+	MethodCallObject 	methodCallObject;
+	ConflictSet 		*conflictSet;
+	dboid_t 			dboidObjectA;
+	EventQueue 			completeGenerationsQueue;
+	Object 				objectA;
+	ObjectStore 		objectStore;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
 	signal(SIGSEGV, pride_error );
+	
+	ObjectStore_init( &objectStore );
+	__conf.objectStore = &objectStore;
 	
 	pthread_cond_init( &__conf.listenDoneCondition, NULL );
 	pthread_mutex_init(  &__conf.listenMutex, NULL );
@@ -81,17 +88,21 @@ int main( int argc, char **argv )
 
 	}
 	
-	dboid = dboidCreate( "object1" );
+	dboidObjectA = dboidCreate( "object_a" );
+	objectA.size = sizeof( objectA );
+	objectA.propertyA = 2;
 	
+	ObjectStore_put( &objectStore, dboidObjectA, &objectA, objectA.size );
+
 	conflictSet = malloc( sizeof(ConflictSet) );
 	
 	ConflictSet_initVars( conflictSet, 10 );
 	conflictSet->stabEventQueue = &completeGenerationsQueue;
 	
-	dboidCopy( conflictSet->dboid, dboid, sizeof( conflictSet->dboid ) );
+	dboidCopy( conflictSet->dboid, dboidObjectA, sizeof( conflictSet->dboid ) );
 	
 	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
-	g_hash_table_insert( __conf.conflictSets, dboid, conflictSet );
+	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSet );
 	
 	
 	pthread_create( &__conf.receiver, NULL, receiverThread, NULL );
@@ -104,7 +115,7 @@ int main( int argc, char **argv )
 
 	/* Check if the replica is a writer */
 	if( __conf.writer == 1 ) {
-		strncpy( methodCallObject.databaseObjectId, "abc123", 8 );
+		strncpy( methodCallObject.databaseObjectId, dboidObjectA, sizeof(methodCallObject.databaseObjectId ) );
 		strncpy( methodCallObject.methodName, "method_a", 10 );
 		methodCallObject.paramSize = 1;
 		methodCallObject.params[0].paramType = paramTypeInt;

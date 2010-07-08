@@ -19,15 +19,20 @@
 #include "ConflictResolution.h"
 #include "Debug.h"
 #include "Generation.h"
+#include "ObjectStore.h"
+#include "Object.h"
 
 void* conflictResolutionThread( void *data)
 {
-	EventQueue *completeGenerationsQueue;
-	ConflictSet *conflictSet;
-	Generation *generation;
-	MethodCallObject *methodCallObject;
+	EventQueue 			*completeGenerationsQueue;
+	ConflictSet 		*conflictSet;
+	Generation 			*generation;
+	MethodCallObject 	*methodCallObject;
+	ObjectStore 		*objectStore;
+	void 				*object;
 	
 	completeGenerationsQueue = (EventQueue*) data;
+	objectStore = __conf.objectStore;
 	
 	__DEBUG( "Starting conflict resolution thread" );
 	
@@ -47,6 +52,12 @@ void* conflictResolutionThread( void *data)
 		
 			methodCallObject = firstPolicy( generation );
 			
+			/* Fetches the object that gets the update */
+			ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );
+			
+			Object_increaseA_resolve( object, methodCallObject->params, methodCallObject->paramSize );
+			
+			/* No need for the generation information */
 			free( generation );
 		}
 		else {
