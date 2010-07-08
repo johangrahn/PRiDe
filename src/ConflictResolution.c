@@ -71,7 +71,6 @@ void* conflictResolutionThread( void *data)
 
 MethodCallObject* firstPolicy(Generation *generation)
 {
-	MethodCallObject 	*update;
 	int 				it;
 	
 	/* Fetches the the update from the first replica that has an update */

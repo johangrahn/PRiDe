@@ -19,10 +19,11 @@
 #ifndef __DBOID_H_
 #define __DBOID_H_
 
-#include <uuid.h>
+//#include <uuid.h>
 	
-
-//#include <ossp/uuid.h>
+#ifndef _UUID_T
+	#include <ossp/uuid.h> 
+#endif
 
 typedef char* dboid_t;
 
