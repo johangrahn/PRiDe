@@ -88,6 +88,9 @@ int ConflictSet_isEmpty( ConflictSet *conflictSet );
 /* Returns 1 if the conflict set is full, 0 otherwise */
 int ConflictSet_isFull( ConflictSet *conflictSet );
 
+/* Creates a new copy of the conflict set */
+ConflictSet* ConflictSet_createCopy( ConflictSet *conflictSet ); 
+
 /* Creates a new generation in the conflict set */
 void ConflictSet_createNewGeneration( ConflictSet *conflictSet );
 

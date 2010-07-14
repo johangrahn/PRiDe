@@ -23,6 +23,7 @@
 #include "Stabilization.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 {
@@ -296,6 +297,19 @@ int ConflictSet_getGenerationPosition( ConflictSet *conflictSet, int generation 
 	
 	return -1;
 }
+
+ConflictSet* ConflictSet_createCopy( ConflictSet *conflictSet )
+{
+	ConflictSet *new;
+	
+	/* Allocate new memory for the shadow copy */
+	new = malloc( sizeof( ConflictSet ) );
+	
+	memcpy( new, conflictSet, sizeof( ConflictSet ) );
+	
+	return new;
+}
+
 
 void ConflictSet_createNewGeneration( ConflictSet *conflictSet )
 {
