@@ -34,6 +34,8 @@ void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 	pthread_mutex_init( &conflictSet->writeLock, NULL );
 
 	conflictSet->numberOfGenerations = numberOfGenerations;
+	
+	conflictSet->activeTransaction = 0;
 }
 
 void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject)

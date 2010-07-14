@@ -60,6 +60,9 @@ typedef struct _ConflictSet {
 	/* Holds a pointer to the stabilization event queue */
 	EventQueue *stabEventQueue;
 	EventQueue *propEventQueue;
+	
+	/* Is 1 when a active transaction is using hte conflict set, 0 otherwise */
+	size_t activeTransaction;
 
 } ConflictSet;
 
