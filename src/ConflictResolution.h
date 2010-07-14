@@ -34,6 +34,8 @@ void* conflictResolutionThread( void *data);
 /* Prototype function for any conflict resolution policies */
 typedef MethodCallObject* (*ConflictResolutionPolicy)( Generation *generation );
 
+
+
 /* Simple resolution policy where the first replicas update 
  * will be used 
  */

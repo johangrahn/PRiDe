@@ -68,6 +68,7 @@ int main( int argc, char **argv )
 	EventQueue 			completeGenerationsQueue;
 	Object 				objectA;
 	ObjectStore 		objectStore;
+
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -80,6 +81,8 @@ int main( int argc, char **argv )
 	pthread_mutex_init(  &__conf.listenMutex, NULL );
 	
 	EventQueue_init( &completeGenerationsQueue );
+	
+	__conf.methodList = g_hash_table_new( g_str_hash, g_str_equal );
 	
 	if( pride_handle_args( argc, argv ) == 0 ) {
 		__ERROR( "Not enough arguments supplied" );
@@ -95,7 +98,7 @@ int main( int argc, char **argv )
 	ObjectStore_put( &objectStore, dboidObjectA, &objectA, objectA.size );
 
 	conflictSet = malloc( sizeof(ConflictSet) );
-	
+		
 	ConflictSet_initVars( conflictSet, 10 );
 	conflictSet->stabEventQueue = &completeGenerationsQueue;
 	
@@ -104,6 +107,10 @@ int main( int argc, char **argv )
 	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
 	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSet );
 	
+	/*
+	 Inserts the methods that is used for the objects 
+	*/
+	g_hash_table_insert( __conf.methodList, "Object_increaseA", &Object_increaseA_resolve );
 	
 	pthread_create( &__conf.receiver, NULL, receiverThread, NULL );
 	pthread_create( &__conf.conflictResolutionThreadId, NULL, conflictResolutionThread, &completeGenerationsQueue );
@@ -116,7 +123,7 @@ int main( int argc, char **argv )
 	/* Check if the replica is a writer */
 	if( __conf.writer == 1 ) {
 		strncpy( methodCallObject.databaseObjectId, dboidObjectA, sizeof(methodCallObject.databaseObjectId ) );
-		strncpy( methodCallObject.methodName, "method_a", 10 );
+		strncpy( methodCallObject.methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
 		methodCallObject.paramSize = 1;
 		methodCallObject.params[0].paramType = paramTypeInt;
 		methodCallObject.params[0].paramData.intData = 2;

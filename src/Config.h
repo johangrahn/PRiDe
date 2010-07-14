@@ -27,6 +27,7 @@
 
 #include "ConflictSet.h"
 #include "ObjectStore.h"
+
 typedef struct _Config {
 	int 		id; 		/* Id of the replica */
 	int 		writer;		/* Sets to 1 if replica is writer */
@@ -50,6 +51,11 @@ typedef struct _Config {
 	/* The object store for all stable objects */
 	ObjectStore *objectStore;
 	
+	/* 
+	 This is a hash table where the key is the method name and the value is the 
+	 function pointer to the method 
+	*/
+	GHashTable *methodList;
 } Config;
 
 /* Global variable for the configuration */

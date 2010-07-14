@@ -36,10 +36,12 @@ void* conflictResolutionThread( void *data)
 	
 	__DEBUG( "Starting conflict resolution thread" );
 	
-	while( 1 ) {
+	while( 1 ) 
+	{
 		/* Listen for new complete generation from all conflict sets */
 		EventQueue_listen( completeGenerationsQueue );
 		
+		/* Fetch the newest event */
 		conflictSet = EventQueue_pop( completeGenerationsQueue );
 		
 		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
@@ -48,6 +50,7 @@ void* conflictResolutionThread( void *data)
 		generation = ConflictSet_popGeneration( conflictSet );
 		
 		if( generation != NULL) {
+			
 			__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
 			methodCallObject = firstPolicy( generation );
@@ -55,7 +58,13 @@ void* conflictResolutionThread( void *data)
 			/* Fetches the object that gets the update */
 			ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );
 			
-			Object_increaseA_resolve( object, methodCallObject->params, methodCallObject->paramSize );
+			/* 
+			 Fetches the pointer to the resolve method for the object 
+			*/
+			prideMethodPrototype = g_hash_table_lookup( __conf.methodList, methodCallObject->methodName );
+			
+			/* Perform the actual method */
+			prideMethodPrototype( object, methodCallObject->params, methodCallObject->paramSize );
 			
 			/* No need for the generation information */
 			free( generation );
@@ -64,7 +73,6 @@ void* conflictResolutionThread( void *data)
 			__DEBUG("No geneations to resolve");
 		}
 	}
-	
 	
 	return NULL;
 }

@@ -24,6 +24,8 @@
 
 #include <stdlib.h>
 
+/* Prototype for each method in a adatabase object when resolving */
+void (*prideMethodPrototype)(void *object, Parameter *params, int paramSize);
 
 /*
  * All objects needs to have the size member at first position 
