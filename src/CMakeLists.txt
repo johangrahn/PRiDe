@@ -2,7 +2,7 @@ ADD_LIBRARY( common STATIC
 	Object.c
 	ObjectStore.c
 #	OptimisticDb.c
-#	Transaction.c
+	Transaction.c
 	MethodCallObject.c
 	ConflictSet.c
 	ConflictResolution.c

@@ -18,22 +18,20 @@
 
 #include <db.h>
 
-#include "MethodCallObject.h"
 #include "ConflictSet.h"
 
 typedef struct {
-	DB_TXN 	*databaseTransaction;
-	DB 		*databaseHandler;
-	DB_ENV 	*databaseEnv; 
-	int		counter; /* Internal counter for each update */
+	
+	/* Stores the database transaction handler from BDB */
+	DB_TXN 	*handler;
 
-	/* For logging */
-	FILE 	*logFile;
+	/* A shadow copy of the conflict set */
+	ConflictSet *conflictSet;
+	
 } Transaction;
 
-void Transaction_create( Transaction *transaction, DB_ENV *databaseEnv );
+/*
+ Creates a new transaction and creates a shadow copy of the conflict set 
+*/
+void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, ConflictSet *conflictSet );
 
-void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject );
-
-/* Commits the transaction and add them to the conflict set */
-void Transaction_commit( Transaction *transaction, ConflictSet *conflictSet );
