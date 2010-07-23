@@ -22,7 +22,11 @@
 //#include <uuid.h>
 	
 #ifndef _UUID_T
-	#include <ossp/uuid.h> 
+	#ifdef LINUX 
+		#include <ossp/uuid.h> 
+	#else
+		#include <uuid.h>
+	#endif
 #endif
 
 typedef char* dboid_t;
