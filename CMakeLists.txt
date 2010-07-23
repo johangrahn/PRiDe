@@ -32,12 +32,14 @@ FIND_PATH( BDB_INC_DIR db.h PATHS
 IF( NOT BDB_INC_DIR )
 	MESSAGE( FATAL_ERROR "Failed to find BDB library" )
 ELSE()
-	MESSAGE( "FOUND BDB library at ${BDB_INC_DIR}" )
+	MESSAGE( "FOUND BDB includes at ${BDB_INC_DIR}" )
 ENDIF()
 
 FIND_LIBRARY( BDB_LIB_DIR NAMES db PATHS /usr/local/BerkeleyDB.4.8/lib /opt/local/lib/db47  )
 IF( NOT BDB_LIB_DIR )
 	MESSAGE( FATAL_ERROR "Failed to find BDB lib dir")
+ELSE()
+	MESSAGE( "Found BDB libs in ${BDB_LIB_DIR}")
 ENDIF()
 
 ADD_DEFINITIONS(${NUM_REPLICAS})
