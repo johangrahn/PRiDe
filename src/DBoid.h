@@ -22,7 +22,7 @@
 //#include <uuid.h>
 	
 #ifndef _UUID_T
-	#ifdef LINUX 
+	#ifdef __OSX 
 		#include <ossp/uuid.h> 
 	#else
 		#include <uuid.h>
