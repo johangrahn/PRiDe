@@ -26,44 +26,9 @@
 /* Opens/creates a database in the main memory */
 void ObjectStore_openDatabase( ObjectStore *objectStore );
 
-void ObjectStore_init( ObjectStore *objectStore )
-{
-	DB_ENV  	*envp;
-	int			ret;
-	u_int32_t 	envFlags;
-	
-	/* Create the database enviroment */
-	ret = db_env_create( &envp, 0 );
-	if( ret != 0 ) {
-		__ERROR( "Failed to create database enviroment in ObjectStore_init() " );
-		exit(1);
-	}	
-	
-	envFlags = 
-		DB_CREATE |
-		DB_INIT_LOCK |
-		DB_INIT_LOG | 
-		DB_INIT_TXN |
-		DB_INIT_MPOOL |
-		DB_PRIVATE /* Don't put region files on disk */
-	;
-
-    /* Store database logs entirely in memory */
-    envp->log_set_config( envp, DB_LOG_IN_MEMORY, 1 ); 
-
-    /* Increase the cache size  */
-    envp->set_cachesize( envp, 0, 100 * 1024 * 1024, 1 ); 
-    
-    envp->set_errfile( envp, stderr );
-
-	/* Open database environment */
-	ret = envp->open( envp, NULL, envFlags, 0 );
-	if( ret != 0 ) {
-		__ERROR( "Failed to open environment for database store" );
-		exit( 1 );
-	}
-	
-	objectStore->environment = envp;
+void ObjectStore_init( ObjectStore *objectStore,  DB_ENV *env )
+{	
+	objectStore->environment = env;
 	
 	ObjectStore_openDatabase( objectStore );
 }

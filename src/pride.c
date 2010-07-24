@@ -77,7 +77,7 @@ int main( int argc, char **argv )
 	
 	bdbEnv = BDB_createInMemoryEnv();
 	
-	ObjectStore_init( &objectStore );
+	ObjectStore_init( &objectStore, bdbEnv );
 	__conf.objectStore = &objectStore;
 	
 	pthread_cond_init( &__conf.listenDoneCondition, NULL );

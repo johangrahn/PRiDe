@@ -21,6 +21,7 @@
 
 #include <db.h>
 #include "DBoid.h"
+
 typedef struct {
 	
 	/* Handler for BerkeleyDB storage */
@@ -29,8 +30,8 @@ typedef struct {
 	
 } ObjectStore;
 
-/* Creates the database (in memory) and sets up the environment */
-void ObjectStore_init( ObjectStore *objectStore );
+/* Creates the database in the environment */
+void ObjectStore_init( ObjectStore *objectStore, DB_ENV *env );
 
 /* Stores the object inside the datbase */
 void ObjectStore_put( ObjectStore *objectStore, dboid_t dboid, void *object, size_t objectSize );
