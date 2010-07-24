@@ -17,6 +17,7 @@ ADD_LIBRARY( common STATIC
 	Replica.c
 	Network.c
 	DBoid.c
+	BDB.c
 )
 
 LINK_DIRECTORIES(

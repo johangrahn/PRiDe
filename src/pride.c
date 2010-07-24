@@ -51,6 +51,7 @@
 #include "DBoid.h"
 #include "Object.h"
 #include "ObjectStore.h"
+#include "BDB.h"
 
 void pride_usage();
 int pride_handle_args( int argc, char **argv );
@@ -68,11 +69,13 @@ int main( int argc, char **argv )
 	EventQueue 			completeGenerationsQueue;
 	Object 				objectA;
 	ObjectStore 		objectStore;
-
+	DB_ENV				*bdbEnv;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
 	signal(SIGSEGV, pride_error );
+	
+	bdbEnv = BDB_createInMemoryEnv();
 	
 	ObjectStore_init( &objectStore );
 	__conf.objectStore = &objectStore;
