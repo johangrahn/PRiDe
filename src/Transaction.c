@@ -37,3 +37,10 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 	/* Creates a shadow copy of the conflict set */
 	transaction->conflictSet = ConflictSet_createCopy( conflictSet );
 }
+
+void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject )
+{
+	ConflictSet_insertLocalUpdate( transaction->conflictSet, methodCallObject );
+}
+
+

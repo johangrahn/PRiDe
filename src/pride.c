@@ -52,6 +52,8 @@
 #include "Object.h"
 #include "ObjectStore.h"
 #include "BDB.h"
+#include "Transaction.h"
+
 
 void pride_usage();
 int pride_handle_args( int argc, char **argv );
@@ -70,6 +72,7 @@ int main( int argc, char **argv )
 	Object 				objectA;
 	ObjectStore 		objectStore;
 	DB_ENV				*bdbEnv;
+	Transaction 		transaction;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -125,19 +128,24 @@ int main( int argc, char **argv )
 
 	/* Check if the replica is a writer */
 	if( __conf.writer == 1 ) {
+		
+		Transaction_begin( &transaction, bdbEnv, conflictSet );
+		
 		strncpy( methodCallObject.databaseObjectId, dboidObjectA, sizeof(methodCallObject.databaseObjectId ) );
 		strncpy( methodCallObject.methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
 		methodCallObject.paramSize = 1;
 		methodCallObject.params[0].paramType = paramTypeInt;
 		methodCallObject.params[0].paramData.intData = 2;
-
+		
+		Transaction_update( &transaction, &methodCallObject );
+/*
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-	
+*/	
 	}
 	
 

@@ -35,3 +35,5 @@ typedef struct {
 */
 void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, ConflictSet *conflictSet );
 
+/* Performs an update to the transaction */
+void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject );
