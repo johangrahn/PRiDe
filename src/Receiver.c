@@ -138,7 +138,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 	PropagationPackage 		*propagationPackage;
 	StabilizationPackage	*stabilizationPackage;
 	ConflictSet				*conflictSet;
-	
+	pthread_mutex_t			*transactionLock;
 	/* Set the pointer to the start */
 	bufferPointer = dataBuffer;
 	
@@ -167,6 +167,11 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 			//		propagationPackage->methodCallObject.databaseObjectId, 
 			//		propagationPackage->methodCallObject.methodName );
 				
+				/* Wait for any transaction to complete first */
+				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propagationPackage->dboid );
+				pthread_mutex_lock( transactionLock ); 
+				
+				__DEBUG( "Locked conflict set for propagation integration" );
 				
 				/* Get the conflict set for the update */
 				conflictSet = g_hash_table_lookup( __conf.conflictSets, propagationPackage->dboid );
@@ -176,6 +181,10 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 					&propagationPackage->methodCallObject, 
 					propagationPackage->replica_id, 
 					propagationPackage->generationNumber );
+					
+				pthread_mutex_unlock( transactionLock );
+				__DEBUG( "Unlocked propagation lock" );
+				
 			break;
 			
 			/* It is a stabilization package */

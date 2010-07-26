@@ -51,6 +51,9 @@ typedef struct _ConflictSet {
 	int minGeneration,
 		maxGeneration;	
 
+	/* Stores the lastest generation that have been propagated */
+	int propagatedGeneration;
+
 	/* Stores the dboid that is used for the conflict set */
 	char dboid[40];
 	
@@ -78,6 +81,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 
 /* Updates the conflict set with stabilization information */
 void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNumber, int replicaId );
+
+/* Tells the conflict set to start propagate the local updates that have been performed */
+void ConflictSet_notifyPropagation( ConflictSet *conflictSet );
 
 /* Checks if the generation at the given position is complete */
 int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition );

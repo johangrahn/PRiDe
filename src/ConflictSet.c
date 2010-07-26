@@ -30,13 +30,15 @@ void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 	conflictSet->generations = malloc( sizeof(Generation) * numberOfGenerations );
 	conflictSet->minPosition = conflictSet->maxPosition = -1;
 	conflictSet->minGeneration = conflictSet->maxGeneration = -1;
-
+	conflictSet->propagatedGeneration = -1;
+	
 	/* Setup mutex */
 	pthread_mutex_init( &conflictSet->writeLock, NULL );
 
 	conflictSet->numberOfGenerations = numberOfGenerations;
 	
 	conflictSet->activeTransaction = 0;
+	
 }
 
 void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject)
@@ -239,6 +241,24 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	}
 }
 
+void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
+{
+	int 				generationPosition;
+	MethodCallObject 	*methodCallObject;
+	
+	// propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
+	
+	/* Check if no prior proagation has been performed */
+	if( conflictSet->propagatedGeneration == -1 ) {
+		generationPosition = 0;		
+	}
+	methodCallObject = conflictSet->generations[ generationPosition ].generationData[__conf.id].methodCallObject;
+	propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
+	conflictSet->propagatedGeneration = methodCallObject->generationNumber;
+	
+	__DEBUG( "Propagted generation %d", methodCallObject->generationNumber );
+}
+
 int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition )
 {
 	int it;	
@@ -372,7 +392,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 }
 
 void ConflictSet_showState( ConflictSet *conflictSet, FILE *output )
-{	
+{
 	Generation *generation;
 	int it,
 		genPosition,

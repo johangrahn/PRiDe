@@ -60,6 +60,11 @@ void Transaction_commit( Transaction *transaction )
 	
 	__DEBUG( "Released a transaction lock on conflict set" );
 	
+	g_hash_table_replace( __conf.conflictSets, transaction->conflictSet->dboid, transaction->conflictSet );
+	
+	ConflictSet_notifyPropagation( transaction->conflictSet );
+	
+	
 }
 
 

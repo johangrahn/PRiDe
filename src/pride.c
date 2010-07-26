@@ -59,6 +59,10 @@ void pride_usage();
 int pride_handle_args( int argc, char **argv );
 void pride_parse_arg_str( char *string, GSList **replicas);
 
+/* function for the hash map to remove the memory allocated for a value */
+void pride_delete_cs( gpointer data );
+
+
 void pride_cleanup();
 void pride_sighandler(int sig);
 void pride_error(int sig) { __ERROR("SIGSEGV");	exit(1);}
@@ -111,7 +115,7 @@ int main( int argc, char **argv )
 	
 	dboidCopy( conflictSet->dboid, dboidObjectA, sizeof( conflictSet->dboid ) );
 	
-	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
+	__conf.conflictSets = g_hash_table_new_full( g_str_hash,  g_str_equal, NULL, pride_delete_cs );
 	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSet );
 	
 	/* Create the transaction locks */
@@ -155,7 +159,7 @@ int main( int argc, char **argv )
 */		
 		Transaction_commit( &transaction );
 
-	}
+	}	
 	
 
 	while(1) {
@@ -285,6 +289,11 @@ void pride_sighandler(int sig)
 	exit(1);
 }
 
+void pride_delete_cs( gpointer data )
+{
+	__DEBUG( "Called delete function to delete old conflict set ");
+	free( data );
+}
 
 
 
