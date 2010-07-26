@@ -72,6 +72,7 @@ int main( int argc, char **argv )
 	Object 				objectA;
 	ObjectStore 		objectStore;
 	DB_ENV				*bdbEnv;
+	pthread_mutex_t		transactionLock;
 	Transaction 		transaction;
 	
 	signal(SIGINT, pride_sighandler );
@@ -112,6 +113,12 @@ int main( int argc, char **argv )
 	
 	__conf.conflictSets = g_hash_table_new( g_str_hash,  g_str_equal );
 	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSet );
+	
+	/* Create the transaction locks */
+	
+	__conf.transactionLocks = g_hash_table_new( g_str_hash,  g_str_equal );
+	pthread_mutex_init( &transactionLock, NULL );
+	g_hash_table_insert( __conf.transactionLocks, dboidObjectA, &transactionLock);
 	
 	/*
 	 Inserts the methods that is used for the objects 

@@ -29,6 +29,7 @@
 #include "ObjectStore.h"
 
 typedef struct _Config {
+	
 	int 		id; 		/* Id of the replica */
 	int 		writer;		/* Sets to 1 if replica is writer */
 	GSList 		*replicas;	/* List of replica definitions */
@@ -56,6 +57,15 @@ typedef struct _Config {
 	 function pointer to the method 
 	*/
 	GHashTable *methodList;
+	
+	/* 
+	A list of object IDs and their lock status
+	The key is the DBoid that can identify a conflict set 
+	The value is a pthread mutex that looks access to conflict set 
+	if a transaction is active 
+	*/
+	GHashTable *transactionLocks;
+
 } Config;
 
 /* Global variable for the configuration */
