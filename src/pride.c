@@ -152,7 +152,9 @@ int main( int argc, char **argv )
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-*/	
+*/		
+		Transaction_commit( &transaction );
+
 	}
 	
 

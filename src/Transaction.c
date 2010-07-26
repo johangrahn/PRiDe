@@ -19,11 +19,12 @@
 #include "Transaction.h"
 #include "Debug.h"
 #include <string.h>
+#include <glib.h>
 
 void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, ConflictSet *conflictSet )
 {
 	int ret;
-	
+	pthread_mutex_t *lock;
 	ret = databaseEnvironment->txn_begin( databaseEnvironment, NULL, &transaction->handler, 0 );
 	
 	if( ret != 0 ) {
@@ -34,6 +35,13 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 	/* Tells the conflict set that there is an transaction processing it */
 	conflictSet->activeTransaction = 1;
 	
+	
+	lock = g_hash_table_lookup( __conf.transactionLocks, conflictSet->dboid ); 
+	pthread_mutex_lock( lock );
+	
+	__DEBUG( "Locked conflict set for a transaction" );
+	
+	
 	/* Creates a shadow copy of the conflict set */
 	transaction->conflictSet = ConflictSet_createCopy( conflictSet );
 }
@@ -41,6 +49,17 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject )
 {
 	ConflictSet_insertLocalUpdate( transaction->conflictSet, methodCallObject );
+}
+
+void Transaction_commit( Transaction *transaction )
+{
+	pthread_mutex_t *lock;
+	
+	lock = g_hash_table_lookup( __conf.transactionLocks, transaction->conflictSet->dboid ); 
+	pthread_mutex_unlock( lock );
+	
+	__DEBUG( "Released a transaction lock on conflict set" );
+	
 }
 
 
