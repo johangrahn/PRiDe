@@ -149,6 +149,7 @@ int main( int argc, char **argv )
 		methodCallObject.params[0].paramData.intData = 2;
 		
 		Transaction_update( &transaction, &methodCallObject );
+		Transaction_update( &transaction, &methodCallObject );
 /*
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
 		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );

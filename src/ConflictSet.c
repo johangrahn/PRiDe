@@ -243,7 +243,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 
 void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 {
-	int 				generationPosition;
+	int 				generationPosition, currentGenPos;
 	MethodCallObject 	*methodCallObject;
 	
 	// propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
@@ -252,11 +252,15 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	if( conflictSet->propagatedGeneration == -1 ) {
 		generationPosition = 0;		
 	}
-	methodCallObject = conflictSet->generations[ generationPosition ].generationData[__conf.id].methodCallObject;
-	propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
-	conflictSet->propagatedGeneration = methodCallObject->generationNumber;
 	
-	__DEBUG( "Propagted generation %d", methodCallObject->generationNumber );
+	for (currentGenPos = generationPosition; currentGenPos <= conflictSet->maxPosition; currentGenPos++ ) {
+		
+		methodCallObject = conflictSet->generations[ currentGenPos ].generationData[__conf.id].methodCallObject;
+		propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
+		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
+	
+		__DEBUG( "Propagted generation %d", methodCallObject->generationNumber );
+	}
 }
 
 int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition )

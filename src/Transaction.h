@@ -39,3 +39,5 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject );
 
 void Transaction_commit( Transaction *transaction );
+
+void Transaction_abort( Transaction *transaction );

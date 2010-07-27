@@ -20,6 +20,7 @@
 #include "Debug.h"
 #include <string.h>
 #include <glib.h>
+#include <stdlib.h>
 
 void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, ConflictSet *conflictSet )
 {
@@ -63,8 +64,15 @@ void Transaction_commit( Transaction *transaction )
 	g_hash_table_replace( __conf.conflictSets, transaction->conflictSet->dboid, transaction->conflictSet );
 	
 	ConflictSet_notifyPropagation( transaction->conflictSet );
-	
-	
+
 }
 
-
+void Transaction_abort( Transaction *transaction ) 
+{
+	pthread_mutex_t *lock;
+	
+	lock = g_hash_table_lookup( __conf.transactionLocks, transaction->conflictSet->dboid ); 
+	pthread_mutex_unlock( lock );
+	
+	free( transaction->conflictSet );
+}
