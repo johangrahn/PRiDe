@@ -46,31 +46,34 @@ void* conflictResolutionThread( void *data)
 		
 		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
 		
-		/* Fetch the generation that is complete */ 
-		generation = ConflictSet_popGeneration( conflictSet );
+		if( !ConflictSet_isEmpty( conflictSet ) )
+		{
+			/* Fetch the generation that is complete */ 
+			generation = ConflictSet_popGeneration( conflictSet );
 		
-		if( generation != NULL) {
+			if( generation != NULL) {
 			
-			__DEBUG( "Performing conflict resolution on generation %d", generation->number );
+				__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
-			methodCallObject = firstPolicy( generation );
+				methodCallObject = firstPolicy( generation );
 			
-			/* Fetches the object that gets the update */
-			ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );
+				/* Fetches the object that gets the update */
+				ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );
 			
-			/* 
-			 Fetches the pointer to the resolve method for the object 
-			*/
-			prideMethodPrototype = g_hash_table_lookup( __conf.methodList, methodCallObject->methodName );
+				/* 
+				 Fetches the pointer to the resolve method for the object 
+				*/
+				prideMethodPrototype = g_hash_table_lookup( __conf.methodList, methodCallObject->methodName );
 			
-			/* Perform the actual method */
-			prideMethodPrototype( object, methodCallObject->params, methodCallObject->paramSize );
+				/* Perform the actual method */
+				prideMethodPrototype( object, methodCallObject->params, methodCallObject->paramSize );
 			
-			/* No need for the generation information */
-			free( generation );
-		}
-		else {
-			__DEBUG("No geneations to resolve");
+				/* No need for the generation information */
+				free( generation );
+			}
+			else {
+				__DEBUG("No geneations to resolve");
+			}
 		}
 	}
 	

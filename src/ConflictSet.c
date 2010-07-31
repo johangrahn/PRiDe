@@ -81,7 +81,7 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	__DEBUG( "Added generation %d for method <%s>", conflictSet->maxGeneration, methodCallObject->methodName );
 
 
-	propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
+	//propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
 	
 	/* Unlock the structure */
 	pthread_mutex_unlock( &conflictSet->writeLock );
