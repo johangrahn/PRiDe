@@ -193,11 +193,17 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				__DEBUG( "Got stabilization package from replica %d with dboid %s on generation %d with %d bytes", stabilizationPackage->replicaId, stabilizationPackage->dboid,  
 				stabilizationPackage->generationNumber, dataPackageSize );
 				
+				/* Wait for any transaction to complete first */
+				transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabilizationPackage->dboid );
+				pthread_mutex_lock( transactionLock );
+				
 				/* Get the conflict set for the update */
 				conflictSet = g_hash_table_lookup( __conf.conflictSets, stabilizationPackage->dboid );
 				
 				ConflictSet_updateStabilization( conflictSet, stabilizationPackage->generationNumber, stabilizationPackage->replicaId);
 				
+				/* Unlock the conflict set */
+				pthread_mutex_unlock( transactionLock );
 			break;
 			
 			default:
