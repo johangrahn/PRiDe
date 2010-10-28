@@ -31,6 +31,7 @@ void* stabilizatorThreadProcess( void *data )
 {
 	
 	ConflictSet *conflictSet;
+	dboid_t		conflictSetDBoid;
 	StabilizatorThreadData *threadData;
 	Generation *generation;
 
@@ -44,7 +45,8 @@ void* stabilizatorThreadProcess( void *data )
 		EventQueue_listen( threadData->stabEventQueue );	
 		
 		/* Fetch the conflict set that sended the event */
-		conflictSet = EventQueue_pop( threadData->stabEventQueue );
+		conflictSetDBoid = EventQueue_pop( threadData->stabEventQueue );
+		conflictSet = g_hash_table_lookup( __conf.conflictSets, conflictSetDBoid );
 		
 		__DEBUG( "Got signal from conflict set" );
 

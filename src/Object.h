@@ -21,7 +21,7 @@
 #define _OBJECT_H_
 
 #include "Parameter.h"
-
+#include "MethodCallObject.h"
 #include <stdlib.h>
 
 /* Prototype for each method in a adatabase object when resolving */
@@ -48,6 +48,8 @@ typedef struct {
 	
 	int propertyA,
 		propertyB;
+		
+	char databaseObjectId[ PRIDE_DBOID_SIZE ];
 
 } Object;
 

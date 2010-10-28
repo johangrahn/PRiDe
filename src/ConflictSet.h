@@ -85,9 +85,6 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 /* Tells the conflict set to start propagate the local updates that have been performed */
 void ConflictSet_notifyPropagation( ConflictSet *conflictSet );
 
-/* Checks if the generation at the given position is complete */
-int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition );
-
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );
 

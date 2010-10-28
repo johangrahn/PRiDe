@@ -163,9 +163,6 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				propagationPackage = (PropagationPackage*) bufferPointer;
 				__DEBUG( "Got Propagation package from replica %d with dboid %s on generation %d with %d bytes", propagationPackage->replica_id, propagationPackage->dboid, 
 				propagationPackage->methodCallObject.generationNumber, dataPackageSize );
-			//	__DEBUG( "Database OID: %s, method name: %s", 
-			//		propagationPackage->methodCallObject.databaseObjectId, 
-			//		propagationPackage->methodCallObject.methodName );
 				
 				/* Wait for any transaction to complete first */
 				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propagationPackage->dboid );

@@ -69,14 +69,14 @@ void pride_error(int sig) { __ERROR("SIGSEGV");	exit(1);}
 
 int main( int argc, char **argv )
 {
-	MethodCallObject 	methodCallObject;
-	ConflictSet 		*conflictSet;
-	dboid_t 			dboidObjectA;
+	MethodCallObject 	*methodCallObject, methodCallObject2;
+	ConflictSet 		*conflictSetA, *conflictSetB;
+	dboid_t 			dboidObjectA, dboidObjectB;
 	EventQueue 			completeGenerationsQueue;
-	Object 				objectA;
+	Object 				objectA, objectB;
 	ObjectStore 		objectStore;
 	DB_ENV				*bdbEnv;
-	pthread_mutex_t		transactionLock;
+	pthread_mutex_t		transactionLockA, transactionLockB;
 	Transaction 		transaction;
 	
 	signal(SIGINT, pride_sighandler );
@@ -105,24 +105,36 @@ int main( int argc, char **argv )
 	dboidObjectA = dboidCreate( "object_a" );
 	objectA.size = sizeof( objectA );
 	objectA.propertyA = 2;
+	dboidObjectB = dboidCreate( "object_b" );
+	objectB.size = sizeof( objectB );
+	objectB.propertyA = 3;
+	
 	
 	ObjectStore_put( &objectStore, dboidObjectA, &objectA, objectA.size );
+	ObjectStore_put( &objectStore, dboidObjectB, &objectB, objectB.size );
 
-	conflictSet = malloc( sizeof(ConflictSet) );
+	conflictSetA = malloc( sizeof(ConflictSet) );
+	conflictSetB = malloc( sizeof(ConflictSet) );
 		
-	ConflictSet_initVars( conflictSet, 10 );
-	conflictSet->stabEventQueue = &completeGenerationsQueue;
+	ConflictSet_initVars( conflictSetA, 10 );
+	conflictSetA->stabEventQueue = &completeGenerationsQueue;
+	ConflictSet_initVars( conflictSetB, 10 );
+	conflictSetB->stabEventQueue = &completeGenerationsQueue;
 	
-	dboidCopy( conflictSet->dboid, dboidObjectA, sizeof( conflictSet->dboid ) );
+	dboidCopy( conflictSetA->dboid, dboidObjectA, sizeof( conflictSetA->dboid ) );
+	dboidCopy( conflictSetB->dboid, dboidObjectB, sizeof( conflictSetB->dboid ) );
 	
 	__conf.conflictSets = g_hash_table_new_full( g_str_hash,  g_str_equal, NULL, pride_delete_cs );
-	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSet );
-	
+	g_hash_table_insert( __conf.conflictSets, dboidObjectA, conflictSetA );
+	g_hash_table_insert( __conf.conflictSets, dboidObjectB, conflictSetB );	
 	/* Create the transaction locks */
 	
 	__conf.transactionLocks = g_hash_table_new( g_str_hash,  g_str_equal );
-	pthread_mutex_init( &transactionLock, NULL );
-	g_hash_table_insert( __conf.transactionLocks, dboidObjectA, &transactionLock);
+
+	pthread_mutex_init( &transactionLockA, NULL );
+	pthread_mutex_init( &transactionLockB, NULL );
+	g_hash_table_insert( __conf.transactionLocks, dboidObjectA, &transactionLockA );
+	g_hash_table_insert( __conf.transactionLocks, dboidObjectB, &transactionLockB );
 	
 	/*
 	 Inserts the methods that is used for the objects 
@@ -140,26 +152,76 @@ int main( int argc, char **argv )
 	/* Check if the replica is a writer */
 	if( __conf.writer == 1 ) {
 		
-		Transaction_begin( &transaction, bdbEnv, conflictSet );
 		
-		strncpy( methodCallObject.databaseObjectId, dboidObjectA, sizeof(methodCallObject.databaseObjectId ) );
-		strncpy( methodCallObject.methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject.paramSize = 1;
-		methodCallObject.params[0].paramType = paramTypeInt;
-		methodCallObject.params[0].paramData.intData = 2;
+		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
-		Transaction_update( &transaction, &methodCallObject );
-		Transaction_update( &transaction, &methodCallObject );
-/*
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-		ConflictSet_insertLocalUpdate( conflictSet, &methodCallObject );
-*/		
-		Transaction_commit( &transaction );
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+		
+		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 2;
+		
+		Transaction_update( &transaction, methodCallObject );
+		
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
 
+		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 2;
+
+		Transaction_update( &transaction, methodCallObject );
+		
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+
+		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 2;
+
+		Transaction_update( &transaction, methodCallObject );
+
+
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+
+		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 2;
+
+		Transaction_update( &transaction, methodCallObject );
+		
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+
+		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 2;
+
+		Transaction_update( &transaction, methodCallObject );
+		Transaction_commit( &transaction );
+		
+	
+	/*
+		Transaction_begin( &transaction, bdbEnv, conflictSetB );
+
+		strncpy( methodCallObject2.databaseObjectId, dboidObjectB, sizeof(methodCallObject2.databaseObjectId ) );
+		strncpy( methodCallObject2.methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject2.paramSize = 1;
+		methodCallObject2.params[0].paramType = paramTypeInt;
+		methodCallObject2.params[0].paramData.intData = 3;
+
+		Transaction_update( &transaction, &methodCallObject2 );
+
+		Transaction_commit( &transaction );
+		
+	*/
 	}	
 	
 

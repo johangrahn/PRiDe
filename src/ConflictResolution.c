@@ -26,6 +26,7 @@ void* conflictResolutionThread( void *data)
 {
 	EventQueue 			*completeGenerationsQueue;
 	ConflictSet 		*conflictSet;
+	dboid_t				conflictSetDBoid;
 	Generation 			*generation;
 	MethodCallObject 	*methodCallObject;
 	ObjectStore 		*objectStore;
@@ -42,7 +43,8 @@ void* conflictResolutionThread( void *data)
 		EventQueue_listen( completeGenerationsQueue );
 		
 		/* Fetch the newest event */
-		conflictSet = EventQueue_pop( completeGenerationsQueue );
+		conflictSetDBoid = EventQueue_pop( completeGenerationsQueue );
+		conflictSet = g_hash_table_lookup( __conf.conflictSets, conflictSetDBoid );
 		
 		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
 		
@@ -68,11 +70,14 @@ void* conflictResolutionThread( void *data)
 				/* Perform the actual method */
 				prideMethodPrototype( object, methodCallObject->params, methodCallObject->paramSize );
 			
+				/* Stores the new object with the new conflict resolved values */
+				ObjectStore_put( objectStore, conflictSet->dboid, object, ((Object*)object)->size );
+			
 				/* No need for the generation information */
 				free( generation );
 			}
 			else {
-				__DEBUG("No geneations to resolve");
+				__DEBUG("No generations to resolve");
 			}
 		}
 	}

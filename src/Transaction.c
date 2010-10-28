@@ -26,6 +26,9 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 {
 	int ret;
 	pthread_mutex_t *lock;
+	
+	transaction->handler = NULL;
+	
 	ret = databaseEnvironment->txn_begin( databaseEnvironment, NULL, &transaction->handler, 0 );
 	
 	if( ret != 0 ) {
@@ -33,15 +36,13 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 		databaseEnvironment->err( databaseEnvironment, ret, "Transaction begin failed!" );
 	}
 	
-	/* Tells the conflict set that there is an transaction processing it */
-	conflictSet->activeTransaction = 1;
-	
-	
 	lock = g_hash_table_lookup( __conf.transactionLocks, conflictSet->dboid ); 
 	pthread_mutex_lock( lock );
 	
-	__DEBUG( "Locked conflict set for a transaction" );
+	__DEBUG( "Locked conflict set for a local transaction" );
 	
+	/* Tells the conflict set that there is an transaction processing it */
+	conflictSet->activeTransaction = 1;
 	
 	/* Creates a shadow copy of the conflict set */
 	transaction->conflictSet = ConflictSet_createCopy( conflictSet );
@@ -56,12 +57,13 @@ void Transaction_commit( Transaction *transaction )
 {
 	pthread_mutex_t *lock;
 	
+	g_hash_table_replace( __conf.conflictSets, transaction->conflictSet->dboid, transaction->conflictSet );
+	
 	lock = g_hash_table_lookup( __conf.transactionLocks, transaction->conflictSet->dboid ); 
 	pthread_mutex_unlock( lock );
 	
 	__DEBUG( "Released a transaction lock on conflict set" );
 	
-	g_hash_table_replace( __conf.conflictSets, transaction->conflictSet->dboid, transaction->conflictSet );
 	
 	ConflictSet_notifyPropagation( transaction->conflictSet );
 

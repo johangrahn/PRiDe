@@ -79,9 +79,6 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	methodCallObject->generationNumber = conflictSet->maxGeneration;
 	
 	__DEBUG( "Added generation %d for method <%s>", conflictSet->maxGeneration, methodCallObject->methodName );
-
-
-	//propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
 	
 	/* Unlock the structure */
 	pthread_mutex_unlock( &conflictSet->writeLock );
@@ -125,9 +122,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		/* Send stabilization message to all other replicas */
 		sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 			
-		if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
-			__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
-			EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+		if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition] ) ) {
+			__DEBUG( "Generation %d is complete for dboid %s", conflictSet->maxGeneration, conflictSet->dboid );
+			EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 		}
 		
 		generationPosition = 0;
@@ -145,11 +142,11 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			conflictSet->generations[generationPosition].number = conflictSet->maxGeneration;
 			
 			/* Set that the replica doesn't have any update on this generation */
-			conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_NO_UPDATE;
+			conflictSet->generations[generationPosition].generationType[__conf.id] = GEN_NO_UPDATE;
 				
-			if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
-				__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
-				EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+			if( Generation_isComplete( &conflictSet->generations[generationPosition] ) ) {
+				__DEBUG( "Generation %d is complete for dboid %s", conflictSet->maxGeneration, conflictSet->dboid );
+				EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 			}
 		}
 		else {
@@ -180,9 +177,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 						
 						
-						if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
-							__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
-							EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+						if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition] ) ) {
+							__DEBUG( "Generation %d is complete for dboid %s", conflictSet->maxGeneration, conflictSet->dboid );
+							EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 						}
 						
 						break;			
@@ -192,9 +189,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						conflictSet->generations[conflictSet->maxPosition].generationType[sourceReplicaId] = GEN_NO_UPDATE;
 						conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 						
-						if( ConflictSet_checkGenerationComplete( conflictSet, conflictSet->maxPosition ) ) {
-							__DEBUG( "Generation %d is complete", conflictSet->maxGeneration );
-							EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+						if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition] ) ) {
+							__DEBUG( "Generation %d is complete for dboid %s", conflictSet->maxGeneration, conflictSet->dboid );
+							EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 						}
 						
 						/* Send stabilization message to all other replicas */
@@ -231,9 +228,9 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	
 		__DEBUG( "Added stabilization information for generation %d from replica %d", generationNumber, replicaId );
 		
-		if( ConflictSet_checkGenerationComplete( conflictSet, generationPosition ) ) {
-			__DEBUG( "Generation %d is complete", generationNumber	 );
-			EventQueue_push( conflictSet->stabEventQueue, conflictSet );
+		if( Generation_isComplete( &conflictSet->generations[generationPosition] ) ) {
+			__DEBUG( "Generation %d is complete for dboid %s", generationNumber, conflictSet->dboid );
+			EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 		}
 	}
 	else {
@@ -246,38 +243,30 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	int 				generationPosition, currentGenPos;
 	MethodCallObject 	*methodCallObject;
 	
-	// propagate( methodCallObject, __conf.replicas, conflictSet->dboid );
-	
 	/* Check if no prior proagation has been performed */
 	if( conflictSet->propagatedGeneration == -1 ) {
-		generationPosition = 0;		
+		generationPosition = 0;
+	}
+	else 
+	{
+		/* Get the first generation that is not propagated */
+		generationPosition = ConflictSet_getGenerationPosition( conflictSet, conflictSet->propagatedGeneration + 1 );
+		if( generationPosition == -1 )
+		{
+			__ERROR( "Failed to get generation position in notifyPropagation()" );
+		} 
 	}
 	
-	for (currentGenPos = generationPosition; currentGenPos <= conflictSet->maxPosition; currentGenPos++ ) {
-		
+	__DEBUG( "Starting to propagate from generation set with index: %d", generationPosition );
+	
+	for (currentGenPos = generationPosition; currentGenPos <= conflictSet->maxPosition; currentGenPos = (currentGenPos + 1 ) % conflictSet->numberOfGenerations ) 
+	{	
 		methodCallObject = conflictSet->generations[ currentGenPos ].generationData[__conf.id].methodCallObject;
 		propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
 		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
 	
-		__DEBUG( "Propagted generation %d", methodCallObject->generationNumber );
+		__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
 	}
-}
-
-int ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, int generationPosition )
-{
-	int it;	
-	GenerationType type;
-	
-	for(it = 0; it < PRIDE_NUM_REPLICAS; it++) {
-		
-		type = conflictSet->generations[generationPosition].generationType[it];
-		
-		if( type == GEN_NONE ) {
-			return 0;
-		} 
-	}
-	
-	return 1;
 }
 
 int ConflictSet_isEmpty( ConflictSet *conflictSet )
@@ -388,6 +377,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	}
 	else {
 		__ERROR( "popGeneration(): Generation %d is not complete", generation->number );
+
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
 		
@@ -411,6 +401,7 @@ void ConflictSet_showState( ConflictSet *conflictSet, FILE *output )
 	fprintf( output, "Max Generation: %d\n", conflictSet->maxGeneration );	
 	fprintf( output, "Min Position: %d\n", conflictSet->minPosition );	
 	fprintf( output, "Max Position: %d\n", conflictSet->maxPosition );	
+	fprintf( output, "DBoid: %s\n", conflictSet->dboid );
 	
 	/* Check if the conflict set is empty, print only if it is not empty */
 	if( !ConflictSet_isEmpty( conflictSet ) ) {
