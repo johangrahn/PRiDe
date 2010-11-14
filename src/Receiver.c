@@ -163,6 +163,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				propagationPackage = (PropagationPackage*) bufferPointer;
 				__DEBUG( "Got Propagation package from replica %d with dboid %s on generation %d with %d bytes", propagationPackage->replica_id, propagationPackage->dboid, 
 				propagationPackage->methodCallObject.generationNumber, dataPackageSize );
+				__DEBUG( "Propagtion package contains method update: <%s with param0: %d>", propagationPackage->methodCallObject.methodName, propagationPackage->methodCallObject.params[0].paramData.intData );
 				
 				/* Wait for any transaction to complete first */
 				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propagationPackage->dboid );
@@ -172,10 +173,13 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				
 				/* Get the conflict set for the update */
 				conflictSet = g_hash_table_lookup( __conf.conflictSets, propagationPackage->dboid );
-				
-					
+			
+				/* Stores the updte inside the conflict set 
+				 * Note that the code create a copy of the method call object so that 
+				 * there is now overrite when new packages arraive 
+				 */  
 				ConflictSet_insertRemoteUpdate( conflictSet, 
-					&propagationPackage->methodCallObject, 
+					MethodCallObject_copyObject( &propagationPackage->methodCallObject ), 
 					propagationPackage->replica_id, 
 					propagationPackage->generationNumber );
 					

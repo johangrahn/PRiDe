@@ -37,7 +37,7 @@ do
 		WRITER="-w"
 	fi 
 	
-	$BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS &
+	$BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS -f $i.log &
 	
 	# Increment the listen port
 	LISTEN_PORT=$[$LISTEN_PORT + 1]

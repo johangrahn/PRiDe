@@ -46,7 +46,7 @@ void* conflictResolutionThread( void *data)
 		conflictSetDBoid = EventQueue_pop( completeGenerationsQueue );
 		conflictSet = g_hash_table_lookup( __conf.conflictSets, conflictSetDBoid );
 		
-		__DEBUG( "Got signal from conflict set with dboid: %s", conflictSet->dboid );
+		__DEBUG( "Got stabilization signal from conflict set with dboid: %s", conflictSet->dboid );
 		
 		if( !ConflictSet_isEmpty( conflictSet ) )
 		{
@@ -58,6 +58,8 @@ void* conflictResolutionThread( void *data)
 				__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
 				methodCallObject = firstPolicy( generation );
+				
+				__DEBUG( "Add update to object with dboid %s: <%s with param0: %d>", conflictSet->dboid, methodCallObject->methodName, methodCallObject->params[0].paramData.intData );
 			
 				/* Fetches the object that gets the update */
 				ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );

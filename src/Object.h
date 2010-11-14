@@ -49,8 +49,8 @@ typedef struct {
 	int propertyA,
 		propertyB;
 		
-	char databaseObjectId[ PRIDE_DBOID_SIZE ];
-
+	char *databaseId;
+	
 } Object;
 
 /* Object methods */

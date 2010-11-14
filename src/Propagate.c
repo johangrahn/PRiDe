@@ -18,6 +18,7 @@ void propagate( MethodCallObject *methodCallObject, GSList *replicas, dboid_t db
 	ppack.methodCallObject = *methodCallObject;
 	ppack.generationNumber = methodCallObject->generationNumber;
 	
-//	__DEBUG( "propagating generation %d ", methodCallObject->generationNumber );
+	__DEBUG( "Propagating method %s with param0: %d with id: %s ", methodCallObject->methodName, methodCallObject->params[0].paramData.intData, dboid );
+
 	networkSendDataToAll( replicas, &ppack, ppack.size );
 }

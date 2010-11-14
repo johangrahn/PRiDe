@@ -69,7 +69,7 @@ void pride_error(int sig) { __ERROR("SIGSEGV");	exit(1);}
 
 int main( int argc, char **argv )
 {
-	MethodCallObject 	*methodCallObject, methodCallObject2;
+	MethodCallObject 	*methodCallObject;
 	ConflictSet 		*conflictSetA, *conflictSetB;
 	dboid_t 			dboidObjectA, dboidObjectB;
 	EventQueue 			completeGenerationsQueue;
@@ -105,9 +105,13 @@ int main( int argc, char **argv )
 	dboidObjectA = dboidCreate( "object_a" );
 	objectA.size = sizeof( objectA );
 	objectA.propertyA = 2;
+	objectA.databaseId = dboidObjectA;
+	
 	dboidObjectB = dboidCreate( "object_b" );
 	objectB.size = sizeof( objectB );
-	objectB.propertyA = 3;
+	objectB.propertyA = 100;
+	objectB.databaseId = dboidObjectB;
+	
 	
 	
 	ObjectStore_put( &objectStore, dboidObjectA, &objectA, objectA.size );
@@ -164,64 +168,23 @@ int main( int argc, char **argv )
 		methodCallObject->params[0].paramData.intData = 2;
 		
 		Transaction_update( &transaction, methodCallObject );
-		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-
-		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 2;
-
-		Transaction_update( &transaction, methodCallObject );
-		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-
-		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 2;
-
-		Transaction_update( &transaction, methodCallObject );
-
-
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-
-		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 2;
-
-		Transaction_update( &transaction, methodCallObject );
-		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-
-		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 2;
-
-		Transaction_update( &transaction, methodCallObject );
+	
 		Transaction_commit( &transaction );
 		
 	
-	/*
+	
 		Transaction_begin( &transaction, bdbEnv, conflictSetB );
+		
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 3;
 
-		strncpy( methodCallObject2.databaseObjectId, dboidObjectB, sizeof(methodCallObject2.databaseObjectId ) );
-		strncpy( methodCallObject2.methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject2.paramSize = 1;
-		methodCallObject2.params[0].paramType = paramTypeInt;
-		methodCallObject2.params[0].paramData.intData = 3;
-
-		Transaction_update( &transaction, &methodCallObject2 );
+		Transaction_update( &transaction, methodCallObject );
 
 		Transaction_commit( &transaction );
-		
-	*/
 	}	
 	
 
@@ -236,7 +199,7 @@ int main( int argc, char **argv )
 
 void pride_usage()
 {
-	fprintf(stdout, "\tUsage: ./pride -i <id> -l <port> -r <id:host:port> \n");
+	fprintf(stdout, "\tUsage: ./pride -i <id> -l <port> -r <id:host:port> [-f logfile ] \n");
 }
 
 int pride_handle_args( int argc, char **argv )
@@ -250,7 +213,7 @@ int pride_handle_args( int argc, char **argv )
 	__conf.lport = -1;
 
 	/* Parses the arguments */
-	while( (arg = getopt(argc, argv, "i:r:l:w" ) ) != -1 ) {
+	while( (arg = getopt(argc, argv, "i:r:l:f:w" ) ) != -1 ) {
 		
 		switch( arg ) {
 		
@@ -271,6 +234,10 @@ int pride_handle_args( int argc, char **argv )
 			
 			case 'l':
 				__conf.lport = atoi( optarg ); 
+			break;
+			
+			case 'f':
+				__conf.log = fopen( optarg, "w");
 			break;
 			
 			default:
@@ -343,6 +310,10 @@ void pride_cleanup()
 
 	/* Closing down sockets */
 	close( __conf.lsocket );
+	
+	/* Close logger */
+	if( __conf.log != stdout )
+		fclose( __conf.log );
 }
 
 void pride_sighandler(int sig)

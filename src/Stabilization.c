@@ -48,7 +48,7 @@ void* stabilizatorThreadProcess( void *data )
 		conflictSetDBoid = EventQueue_pop( threadData->stabEventQueue );
 		conflictSet = g_hash_table_lookup( __conf.conflictSets, conflictSetDBoid );
 		
-		__DEBUG( "Got signal from conflict set" );
+		__DEBUG( "Got stabilization signal from conflict set with dboid: %s", conflictSet->dboid );
 
 		
 		/* Fetch each generation that is complete and stabilize it */
@@ -68,7 +68,7 @@ void* stabilizatorThreadProcess( void *data )
 void stabilize( GHashTable *objectStore, GHashTable *methods, Generation *generation )
 {
 	
-	// Ogly hack to not clean this code :)
+	// Ugly hack to not clean this code :)
 	return ;
 	
 	
