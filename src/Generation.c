@@ -32,7 +32,7 @@ void Generation_init( Generation *generation )
 	}
 }
 
-void Generation_clear( Generation *generation )
+void Generation_free( Generation *generation )
 {
 	int it;
 

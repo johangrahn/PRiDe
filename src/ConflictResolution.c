@@ -76,7 +76,7 @@ void* conflictResolutionThread( void *data)
 				ObjectStore_put( objectStore, conflictSet->dboid, object, ((Object*)object)->size );
 			
 				/* No need for the generation information */
-				free( generation );
+				Generation_free( generation );
 			}
 			else {
 				__DEBUG("No generations to resolve");

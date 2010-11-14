@@ -58,7 +58,7 @@ typedef struct {
 void Generation_init( Generation *generation );
 
 /* Clears all memory that have been allocated inside the generation */
-void Generation_clear( Generation *generation );
+void Generation_free( Generation *generation );
 
 /* Clones the object */
 Generation* Generation_clone( Generation *generation );

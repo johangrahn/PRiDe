@@ -57,7 +57,7 @@ void* stabilizatorThreadProcess( void *data )
 			__DEBUG( "Stabilized generation %d", generation->number );
 
 			/* Remove old generation information */
-			Generation_clear( generation );
+			Generation_free( generation );
 			free( generation );
 
 		}
