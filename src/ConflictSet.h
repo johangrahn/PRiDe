@@ -33,7 +33,7 @@
 #include <glib.h>
 
 #ifndef PRIDE_CS_SIZE 
-	#define PRIDE_CS_SIZE 10
+	#define PRIDE_CS_SIZE 500
 #endif 
 
 typedef struct _ConflictSet {
@@ -87,6 +87,9 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet );
 
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );
+
+/* Checks so that there are no errors in the conflict set */
+int ConflictSet_checkIntegrity( ConflictSet *conflictSet ); 
 
 /* Returns 1 if the conflict set is full, 0 otherwise */
 int ConflictSet_isFull( ConflictSet *conflictSet );

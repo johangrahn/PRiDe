@@ -53,7 +53,9 @@
 #include "ObjectStore.h"
 #include "BDB.h"
 #include "Transaction.h"
-
+#include "Timer.h"
+#include "Watch.h"
+#include <time.h>
 
 void pride_usage();
 int pride_handle_args( int argc, char **argv );
@@ -78,6 +80,7 @@ int main( int argc, char **argv )
 	DB_ENV				*bdbEnv;
 	pthread_mutex_t		transactionLockA, transactionLockB;
 	Transaction 		transaction;
+	int 				it;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -104,7 +107,7 @@ int main( int argc, char **argv )
 	
 	dboidObjectA = dboidCreate( "object_a" );
 	objectA.size = sizeof( objectA );
-	objectA.propertyA = 2;
+	objectA.propertyA = 0;
 	objectA.databaseId = dboidObjectA;
 	
 	dboidObjectB = dboidCreate( "object_b" );
@@ -120,9 +123,9 @@ int main( int argc, char **argv )
 	conflictSetA = malloc( sizeof(ConflictSet) );
 	conflictSetB = malloc( sizeof(ConflictSet) );
 		
-	ConflictSet_initVars( conflictSetA, 10 );
+	ConflictSet_initVars( conflictSetA, PRIDE_CS_SIZE );
 	conflictSetA->stabEventQueue = &completeGenerationsQueue;
-	ConflictSet_initVars( conflictSetB, 10 );
+	ConflictSet_initVars( conflictSetB, PRIDE_CS_SIZE );
 	conflictSetB->stabEventQueue = &completeGenerationsQueue;
 	
 	dboidCopy( conflictSetA->dboid, dboidObjectA, sizeof( conflictSetA->dboid ) );
@@ -157,18 +160,23 @@ int main( int argc, char **argv )
 	if( __conf.writer == 1 ) {
 		
 		
+		
+		
+		
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-		
-		strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 2;
-		
-		Transaction_update( &transaction, methodCallObject );
 	
+		for ( it = 0; it < 250; it++ ) {
+			methodCallObject = malloc( sizeof( MethodCallObject ) );	
+			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
+			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+			methodCallObject->paramSize = 1;
+			methodCallObject->params[0].paramType = paramTypeInt;
+			methodCallObject->params[0].paramData.intData = 1;
+		
+			Transaction_update( &transaction, methodCallObject );
+		}
+		
 		Transaction_commit( &transaction );
 		
 	
@@ -183,15 +191,41 @@ int main( int argc, char **argv )
 		methodCallObject->params[0].paramData.intData = 3;
 
 		Transaction_update( &transaction, methodCallObject );
+		
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 3;
+
+		Transaction_update( &transaction, methodCallObject );
+			
+		methodCallObject = malloc( sizeof( MethodCallObject ) );
+		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
+		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
+		methodCallObject->paramSize = 1;
+		methodCallObject->params[0].paramType = paramTypeInt;
+		methodCallObject->params[0].paramData.intData = 3;
+
+		Transaction_update( &transaction, methodCallObject );		
 
 		Transaction_commit( &transaction );
+		
+		watch_setValue( it );
+		__TIME( "Starting elaped time measure" );
+		timer_mark( &__stable_start );
+		
 	}	
 	
+	
 
+	
 	while(1) {
 		sleep(2);
 	}
 
+		
 	pthread_join( __conf.receiver, NULL);
 	pthread_join(__conf.conflictResolutionThreadId, NULL);
 	return 0;

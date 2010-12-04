@@ -18,6 +18,8 @@ ADD_LIBRARY( common STATIC
 	Network.c
 	DBoid.c
 	BDB.c
+	Timer.c
+	Watch.c
 )
 
 LINK_DIRECTORIES(

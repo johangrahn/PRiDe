@@ -21,7 +21,8 @@
 #include "Generation.h"
 #include "ObjectStore.h"
 #include "Object.h"
-
+#include "Watch.h"
+#include "Timer.h"
 void* conflictResolutionThread( void *data)
 {
 	EventQueue 			*completeGenerationsQueue;
@@ -30,6 +31,7 @@ void* conflictResolutionThread( void *data)
 	Generation 			*generation;
 	MethodCallObject 	*methodCallObject;
 	ObjectStore 		*objectStore;
+	timeval 			result;
 	void 				*object;
 	
 	completeGenerationsQueue = (EventQueue*) data;
@@ -71,7 +73,18 @@ void* conflictResolutionThread( void *data)
 			
 				/* Perform the actual method */
 				prideMethodPrototype( object, methodCallObject->params, methodCallObject->paramSize );
-			
+				
+				/*
+				 * Check the value of the update that have been performed to see if it is the last update
+				 * so that the elapsed time can be calculated
+				 */
+				if(((Object*)object)->propertyA == watch_getValue() ) {	
+					timer_mark( &__stable_end );
+					timer_getDiff( &result, &__stable_start, &__stable_end );
+					
+					__TIME( "Elapsed time: %ld.%06d", result.tv_sec, result.tv_usec);
+				}
+				
 				/* Stores the new object with the new conflict resolved values */
 				ObjectStore_put( objectStore, conflictSet->dboid, object, ((Object*)object)->size );
 			

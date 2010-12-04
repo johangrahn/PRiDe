@@ -264,7 +264,6 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 		methodCallObject = conflictSet->generations[ currentGenPos ].generationData[__conf.id].methodCallObject;
 		propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
 		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
-	
 		__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
 	}
 }
@@ -282,6 +281,9 @@ int ConflictSet_isEmpty( ConflictSet *conflictSet )
 
 int ConflictSet_isFull( ConflictSet *conflictSet )
 {
+	/* 
+	 * Check if the number of generations that have been inserted is less than the number of maximum generations
+	 */
 	if( (conflictSet->maxGeneration - conflictSet->minGeneration) < ( conflictSet->numberOfGenerations - 1) ) {
 		return 0;
 	}
