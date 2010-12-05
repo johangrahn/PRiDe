@@ -60,7 +60,6 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	else {
 		if( ConflictSet_isFull( conflictSet ) ) {
 			__ERROR( "Conflict set is full!" );
-			//ConflictSet_showState( conflictSet, stdout );
 			exit( 1 );
 		}	
 		else {
@@ -82,15 +81,6 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	
 	/* Unlock the structure */
 	pthread_mutex_unlock( &conflictSet->writeLock );
-	
-	
-	/* Notify propagator that the generation needs to be propagated */
-	//EventQueue_push( conflictSet->propEventQueue, conflictSet );
-
-	/* If the generation is complete, notify stabilizator */
-	//if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition ] ) ) {
-//		EventQueue_push( conflictSet->stabEventQueue, conflictSet );
-//	}
 }
 
 void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject, int sourceReplicaId, int sourceGeneration )
@@ -135,6 +125,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		if( sourceGeneration >= conflictSet->minGeneration && sourceGeneration <= conflictSet->maxGeneration ) {
 			
 			generationPosition = ConflictSet_getGenerationPosition( conflictSet, sourceGeneration );
+			if( generationPosition == -1 ) {
+				__ERROR( "Failed to get generation position in insertRemoteUpdate" );
+			}
 			
 			/* The update can be stored in the conflict set directly */
 			conflictSet->generations[generationPosition].generationType[sourceReplicaId] = GEN_UPDATE;
@@ -221,6 +214,10 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNumber, int replicaId )
 {
 	int generationPosition;
+	int maxGeneration;
+	Generation *createdGeneration;
+	
+	pthread_mutex_lock( &conflictSet->writeLock );
 	
 	generationPosition = ConflictSet_getGenerationPosition( conflictSet, generationNumber );
 	if( generationPosition != -1 ) {
@@ -234,8 +231,46 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		}
 	}
 	else {
-		__ERROR( "Failed to find generation position for generation %d in function ConflictSet_getGenerationPosition", generationNumber );
+		__ERROR( "Trying to insert stabilization in generation %d into generation that doesn't exists, max is %d ", generationNumber, conflictSet->maxGeneration );
+		__DEBUG( "Inserting stabilization message into generation %d that needs to be created", generationNumber );
+		
+		/*  
+		 * Generation is not found, need to check if the generation is higher than 
+		 * the maximum generation, then we need to create new generations to that given generation 
+		 */
+		maxGeneration = conflictSet->maxGeneration + 1;
+		if( maxGeneration < generationNumber ) {
+			
+			/* Create the number of generations that is needed to store the stabilization */
+			while( maxGeneration < generationNumber ) {
+				ConflictSet_createNewGeneration( conflictSet );
+				createdGeneration = &(conflictSet->generations[conflictSet->maxPosition]);
+				
+				createdGeneration->generationType[__conf.id] = GEN_NO_UPDATE;
+				createdGeneration->generationType[replicaId] = GEN_NO_UPDATE;
+				createdGeneration->number = conflictSet->maxGeneration;
+				
+				/* Need to send stabilization here because a new generation have been created */
+				sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
+				
+				/* Increate the created generations counter */
+				maxGeneration++;
+				
+				__ERROR( "Created generation %d for stabilization", maxGeneration );
+				
+				/* Need to check if the generation that was created also is completed */
+				if( Generation_isComplete( createdGeneration ) ) {
+					__DEBUG( "Generation %d is complete for dboid %s", maxGeneration, conflictSet->dboid );
+					EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
+				}
+			}
+		}
+		else {
+			__ERROR( "Stabilization message with generation %d is lower than the smalest generation number", generationNumber );
+		}
 	}
+	
+	pthread_mutex_unlock( &conflictSet->writeLock );
 }
 
 void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
@@ -278,6 +313,17 @@ int ConflictSet_isEmpty( ConflictSet *conflictSet )
 		return 0;
 	}
 }
+
+
+int ConflictSet_getSize( ConflictSet *conflictSet )
+{
+	if( ConflictSet_isEmpty( conflictSet ) ) {
+		return 0;
+	}
+	
+	return conflictSet->maxGeneration - conflictSet->minGeneration;
+}
+
 
 int ConflictSet_isFull( ConflictSet *conflictSet )
 {

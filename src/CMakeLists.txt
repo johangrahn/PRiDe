@@ -1,7 +1,6 @@
 ADD_LIBRARY( common STATIC
 	Object.c
 	ObjectStore.c
-#	OptimisticDb.c
 	Transaction.c
 	MethodCallObject.c
 	ConflictSet.c
@@ -10,9 +9,6 @@ ADD_LIBRARY( common STATIC
 	Generation.c
 	EventQueue.c
 	Receiver.c
-#	Network.c
-#	Replica.c
-#	ReplicaList.c
 	Propagate.c
 	Replica.c
 	Network.c

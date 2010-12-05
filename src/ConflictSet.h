@@ -91,6 +91,9 @@ int ConflictSet_isEmpty( ConflictSet *conflictSet );
 /* Checks so that there are no errors in the conflict set */
 int ConflictSet_checkIntegrity( ConflictSet *conflictSet ); 
 
+/* Returns the number of generations in the conflict set */
+int ConflictSet_getSize( ConflictSet *conflictSet );
+
 /* Returns 1 if the conflict set is full, 0 otherwise */
 int ConflictSet_isFull( ConflictSet *conflictSet );
 
