@@ -44,7 +44,9 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 	updatesLeft = numCalls;
 	
 	/* Calucales the number of packages that is needed to send the data */
-	numberPackages = ceil( numCalls / packSize );
+	numberPackages = ceil( numCalls / (double)packSize );
+	
+	__DEBUG( "Number of propagation packages to send: %d for %d updates", numberPackages, numCalls );
 	
 	for( it = 0; it < numberPackages; it++ )
 	{
