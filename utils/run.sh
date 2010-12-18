@@ -18,6 +18,8 @@ PORT=$START_PORT
 LISTEN_PORT=$START_PORT
 WRITER=""
 
+echo "Creating $REPLICAS replicas"
+
 for (( i=0; i < $REPLICAS; i++ )) 
 do
 	HOSTS=""
@@ -39,6 +41,7 @@ do
 	
 	$BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS -f $i.log &
 	
+	echo "Starting replica nr $i"
 	# Increment the listen port
 	LISTEN_PORT=$[$LISTEN_PORT + 1]
 

@@ -54,6 +54,9 @@ typedef struct _ConflictSet {
 	/* Stores the lastest generation that have been propagated */
 	int propagatedGeneration;
 
+	/* Stores the last generation that have been stabilized */
+	int stabilizedGeneration;
+	
 	/* Stores the dboid that is used for the conflict set */
 	char dboid[40];
 	
@@ -84,6 +87,9 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 
 /* Tells the conflict set to start propagate the local updates that have been performed */
 void ConflictSet_notifyPropagation( ConflictSet *conflictSet );
+
+/* Notifies the conflict set when it is time to send out stabilization messages for any created generations */
+void ConflictSet_notifyStabilization( ConflictSet *conflictSet );
 
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );

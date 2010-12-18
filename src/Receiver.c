@@ -106,6 +106,7 @@ void* receiverThread(void *data)
 					else {					
 						//__DEBUG( "Incoming data" );
 						numbytes = recv(i, buffer, sizeof( buffer ), 0 );
+						__DEBUG( "Recevied  %d bytes", numbytes);
 						if(numbytes > 0 ) {
 							
 							recevierHandleData( buffer, numbytes );
@@ -134,11 +135,15 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 	char 					*bufferPointer;		/* Pointer to the current data */
 	int 					dataLeft; 			/* How much bytes there are left to handle */
 	int						dataPackageSize;
+	int						it;
 	Package					*dataPackage;
 	PropagationPackage 		*propagationPackage;
+	Propagation2Package		*propPackage;
 	StabilizationPackage	*stabilizationPackage;
+	Stabilization2Package 	*stabPackage;
 	ConflictSet				*conflictSet;
 	pthread_mutex_t			*transactionLock;
+	
 	/* Set the pointer to the start */
 	bufferPointer = dataBuffer;
 	
@@ -182,11 +187,52 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 					MethodCallObject_copyObject( &propagationPackage->methodCallObject ), 
 					propagationPackage->replica_id, 
 					propagationPackage->generationNumber );
-					
+				
+				/* Notifies the conflict that it is time to send stabilization messages */	
+				ConflictSet_notifyStabilization( conflictSet );
+				
 				pthread_mutex_unlock( transactionLock );
+				
 				__DEBUG( "Unlocked propagation lock" );
 				
 			break;
+			
+			
+			case PACK_PROP2:
+				propPackage = (Propagation2Package *) bufferPointer;
+				
+				__DEBUG( "Got propagation 2 package from replica %d with dboid %s", propPackage->replica_id, propPackage->dboid );
+				__DEBUG( "Propagation package contains %d generations ", propPackage->numberOfMethodCalls );
+				
+				/* Wait for any transaction to complete first */
+				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propPackage->dboid );
+				pthread_mutex_lock( transactionLock );
+				
+				/* Get the conflict set for the update */
+				conflictSet = g_hash_table_lookup( __conf.conflictSets, propPackage->dboid );
+				
+				/* Inserts all updates */ 	
+				for( it = 0; it < propPackage->numberOfMethodCalls; it++ ) 
+				{
+					__DEBUG( "Iserting method %s", propPackage->objects[it].methodName );
+					/* Stores the updte inside the conflict set 
+					 * Note that the code create a copy of the method call object so that 
+					 * there is now overrite when new packages arraive 
+					 */  
+					ConflictSet_insertRemoteUpdate( conflictSet, 
+						MethodCallObject_copyObject( &propPackage->objects[it] ), 
+						propPackage->replica_id, 
+						propPackage->objects[it].generationNumber );
+				}
+				
+				/* Notifies the conflict that it is time to send stabilization messages */	
+				ConflictSet_notifyStabilization( conflictSet );
+				
+				
+				/* Unlock the conflict set */
+				pthread_mutex_unlock( transactionLock );
+			break;
+			
 			
 			/* It is a stabilization package */
 			case PACK_STAB: 
@@ -205,6 +251,35 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				
 				/* Unlock the conflict set */
 				pthread_mutex_unlock( transactionLock );
+			break;
+			
+			
+			/* Handler for the improved stabilization package */
+			case PACK_STAB2:
+				stabPackage = (Stabilization2Package *) bufferPointer;
+				__DEBUG( "Got stabilization 2 package from replica %d with dboid %s with gen range {%d, %d}", 
+				stabPackage->replicaId, stabPackage->dboid, stabPackage->startGeneration, stabPackage->endGeneration  );
+							
+				/*
+				 * Todo: Insert handler for the package 
+				 */
+				
+				/* Wait for any transaction to complete first */
+				transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabPackage->dboid );
+				pthread_mutex_lock( transactionLock );
+				
+				/* Get the conflict set for the update */
+				conflictSet = g_hash_table_lookup( __conf.conflictSets, stabPackage->dboid );
+				
+				/* Inserts all stabilization messages into the conflict set */
+				for( it = stabPackage->startGeneration; it <= stabPackage->endGeneration; it++ )
+				{
+					ConflictSet_updateStabilization( conflictSet, it, stabPackage->replicaId);
+				}
+				
+				/* Unlock the conflict set */
+				pthread_mutex_unlock( transactionLock );
+				
 			break;
 			
 			default:

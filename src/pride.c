@@ -167,7 +167,7 @@ int main( int argc, char **argv )
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 	
-		for ( it = 0; it < 50; it++ ) {
+		for ( it = 0; it < 100; it++ ) {
 			methodCallObject = malloc( sizeof( MethodCallObject ) );	
 			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
 			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
@@ -213,7 +213,7 @@ int main( int argc, char **argv )
 
 		Transaction_commit( &transaction );
 		
-		watch_setValue( it );
+		watch_setValue( 200 );
 		__TIME( "Starting elaped time measure" );
 		timer_mark( &__stable_start );
 		

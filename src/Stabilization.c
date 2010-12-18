@@ -118,3 +118,22 @@ int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t 
 	
 	return 1;
 }
+
+int sendStabilizationMessage( GSList *replicas, int startGeneration, int endGeneration, int replicaId, dboid_t dboid )
+{
+	Stabilization2Package pack;
+	
+	pack.size 				= sizeof( Stabilization2Package );
+	pack.pack_type 			= PACK_STAB2;
+	pack.replicaId 			= replicaId;
+	pack.startGeneration 	= startGeneration;
+	pack.endGeneration 		= endGeneration;
+	
+	dboidCopy( pack.dboid, dboid, sizeof( pack.dboid ) );
+	
+	__DEBUG( "Sending stabilization message from gen %d to gen %d ", startGeneration, endGeneration );
+	
+	networkSendDataToAll( replicas, &pack, pack.size );
+	
+	return 1;
+}

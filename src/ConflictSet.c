@@ -31,6 +31,7 @@ void ConflictSet_initVars( ConflictSet *conflictSet, int numberOfGenerations )
 	conflictSet->minPosition = conflictSet->maxPosition = -1;
 	conflictSet->minGeneration = conflictSet->maxGeneration = -1;
 	conflictSet->propagatedGeneration = -1;
+	conflictSet->stabilizedGeneration = -1;
 	
 	/* Setup mutex */
 	pthread_mutex_init( &conflictSet->writeLock, NULL );
@@ -110,7 +111,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_NO_UPDATE;
 			
 		/* Send stabilization message to all other replicas */
-		sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
+		//sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 			
 		if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition] ) ) {
 			__DEBUG( "Generation %d is complete for dboid %s", conflictSet->maxGeneration, conflictSet->dboid );
@@ -167,7 +168,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						conflictSet->generations[conflictSet->maxPosition].generationType[__conf.id] = GEN_NO_UPDATE;
 							
 						/* Send stabilization message to all other replicas */
-						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
+						// sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id, conflictSet->dboid );
 						
 						
 						if( Generation_isComplete( &conflictSet->generations[conflictSet->maxPosition] ) ) {
@@ -188,7 +189,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 						}
 						
 						/* Send stabilization message to all other replicas */
-						sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
+						//sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
 					}
 				
 			
@@ -277,7 +278,9 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 {
 	int 				generationPosition, currentGenPos;
 	MethodCallObject 	*methodCallObject;
+	GSList 				*methodCalls;
 	
+	methodCalls = NULL;
 	/* Check if no prior proagation has been performed */
 	if( conflictSet->propagatedGeneration == -1 ) {
 		generationPosition = 0;
@@ -297,9 +300,50 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	for (currentGenPos = generationPosition; currentGenPos <= conflictSet->maxPosition; currentGenPos = (currentGenPos + 1 ) % conflictSet->numberOfGenerations ) 
 	{	
 		methodCallObject = conflictSet->generations[ currentGenPos ].generationData[__conf.id].methodCallObject;
-		propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
+		
+		methodCalls = g_slist_append( methodCalls, methodCallObject );
+		
+		//propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
 		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
-		__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
+		//__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
+	}
+	
+	/* Sends all the updates to all nodes on the network */
+	propagateList( methodCalls, __conf.replicas, conflictSet->dboid );
+	
+	g_slist_free( methodCalls );
+}
+
+void ConflictSet_notifyStabilization( ConflictSet *conflictSet )
+{
+	int startGeneration;
+	int endGeneration;
+	
+	/* Check if stabilization has been performed before */
+	if( conflictSet->stabilizedGeneration == -1) 
+	{
+		startGeneration = 0;
+		endGeneration = conflictSet->maxGeneration;
+	}
+	else
+	{
+		/* Get the first generation that haven't been stabilized */
+		startGeneration = conflictSet->stabilizedGeneration + 1;
+		
+		/* Stabilize all generations that have been created
+		 * This insures that the maximum number of generations are send to the replicas 
+		 */
+		endGeneration = conflictSet->maxGeneration;
+	}
+
+	/* Check that message is required */
+	if( startGeneration <= endGeneration ) 
+	{
+		/* Sends the stabilization to all replicas */
+		sendStabilizationMessage( __conf.replicas, startGeneration, endGeneration, __conf.id, conflictSet->dboid );
+	
+		/* Update what generations that have been send */
+		conflictSet->stabilizedGeneration = endGeneration;
 	}
 }
 

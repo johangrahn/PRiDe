@@ -54,10 +54,12 @@ typedef struct {
 	/* Sets how many parameters are used in the structure */
 	int paramSize;
 	
+	int generationNumber;
+	
 	/* Storage area for parameters */
 	Parameter params[MCO_MAX_PARAMS];
 
-	int generationNumber;
+	
 	
 } MethodCallObject;
 

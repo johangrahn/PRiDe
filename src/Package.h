@@ -25,7 +25,9 @@
 enum package_type {
 	PACK_ID,
 	PACK_PROP,
-	PACK_STAB
+	PACK_PROP2,
+	PACK_STAB,
+	PACK_STAB2
 };
 
 
@@ -43,8 +45,17 @@ typedef struct _PropagationPackage {
 	MethodCallObject methodCallObject;
 	int generationNumber;
 	char dboid[40];
-	
 } PropagationPackage;
+
+typedef struct _Propagation2Package {
+	int size;
+	enum package_type pack_type;
+
+	int replica_id;
+	char dboid[40];
+	int numberOfMethodCalls;
+	MethodCallObject objects[1];
+} Propagation2Package;
 
 typedef struct _StabilizationPackage {
 	int size;
@@ -56,6 +67,19 @@ typedef struct _StabilizationPackage {
 	char dboid[40];
 	
 } StabilizationPackage;
+
+typedef struct _Stabilization2Package {
+	int size;
+	enum package_type pack_type;
+	
+	/* Data */
+	int replicaId;
+	char dboid[40];
+	
+	int startGeneration;
+	int endGeneration;
+	
+} Stabilization2Package;
 
 
 #endif

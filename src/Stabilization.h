@@ -47,4 +47,9 @@ void stabilize( GHashTable *objects, GHashTable *methods, Generation *generation
 
 int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dbid );
 	
+/*
+ * Sends the stbilization information to each node in the replica list 
+ */ 
+int sendStabilizationMessage( GSList *replicas, int startGeneration, int endGeneration, int replicaId, dboid_t dboid );
+
 #endif

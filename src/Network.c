@@ -144,6 +144,7 @@ int networkSendAll( int socket, void *data, int length )
 	totalSent = 0;
 	bytesLeft = length;
 	
+	__DEBUG( "Sending %d bytes", length );
 	/* Sends some amount of data at the time until all is sent */
 	while( totalSent < length ) {
 		sent = send( socket, data + totalSent, bytesLeft, 0);
@@ -179,9 +180,10 @@ void networkSendDataToAll( GSList *replicas, void *data, int dataSize )
 			rep_socket = networkCreateTCPSocket( rep->host, rep->port );
 			if( rep_socket == -1 ) {
 				__DEBUG( "Failed to connect to host %s on port %d", rep->host, rep->port );
-				usleep( 250000 );
+				usleep( 25000 );
 			}
 			else {
+				__DEBUG( "Connection successful to host %s on port %d", rep->host, rep->port );
 				break;
 			}
 		}

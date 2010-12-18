@@ -27,4 +27,6 @@
 /* Propagates the update to all replicas that are registered */
 void propagate( MethodCallObject *methodCallObject, GSList *replicas, dboid_t dboid );
 
+void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid );
+
 #endif
