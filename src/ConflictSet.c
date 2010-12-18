@@ -240,7 +240,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		 * the maximum generation, then we need to create new generations to that given generation 
 		 */
 		maxGeneration = conflictSet->maxGeneration + 1;
-		if( maxGeneration < generationNumber ) {
+		if( maxGeneration <= generationNumber ) {
 			
 			/* Create the number of generations that is needed to store the stabilization */
 			while( maxGeneration < generationNumber ) {
@@ -307,6 +307,7 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
 		//__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
 	}
+	
 	
 	/* Sends all the updates to all nodes on the network */
 	propagateList( methodCalls, __conf.replicas, conflictSet->dboid );
