@@ -151,6 +151,7 @@ int networkSendAll( int socket, void *data, int length )
 		
 		if( sent == -1 ) {
 			__ERROR( "Failed to send %d bytes ", bytesLeft );
+			continue;
 		}
 		
 		totalSent = totalSent + sent;
