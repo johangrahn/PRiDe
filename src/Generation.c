@@ -64,7 +64,7 @@ Generation* Generation_clone( Generation *generation )
 
 		switch (generation->generationType[ it ] ) {
 			case GEN_UPDATE:
-				generationCopy->generationData[it].methodCallObject = generation->generationData[ it ].methodCallObject;
+				generationCopy->generationData[it].methodCallObject = MethodCallObject_copyObject( generation->generationData[ it ].methodCallObject );
 			break;
 
 			case GEN_NO_UPDATE:
