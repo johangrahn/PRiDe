@@ -220,6 +220,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	
 	/*
 	 * Todo: Is this lock necessary if there is only one receiver process that calls this method?
+	 * This is needed since conflict set needs to create new generation to store remote stabilization 
 	 */
 	pthread_mutex_lock( &conflictSet->writeLock );
 	
@@ -235,7 +236,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		}
 	}
 	else {
-		__ERROR( "Trying to insert stabilization in generation %d into generation that doesn't exists, max is %d ", generationNumber, conflictSet->maxGeneration );
+		__DEBUG( "Trying to insert stabilization in generation %d into generation that doesn't exists, max is %d ", generationNumber, conflictSet->maxGeneration );
 		__DEBUG( "Inserting stabilization message into generation %d that needs to be created", generationNumber );
 		
 		/*  
@@ -246,7 +247,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		if( maxGeneration <= generationNumber ) {
 			
 			/* Create the number of generations that is needed to store the stabilization */
-			while( maxGeneration < generationNumber ) {
+			while( maxGeneration <= generationNumber ) {
 				ConflictSet_createNewGeneration( conflictSet );
 				createdGeneration = &(conflictSet->generations[conflictSet->maxPosition]);
 				
@@ -467,6 +468,9 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 		 * the stabilizator 
 		 */
 		generationCopy = Generation_clone( generation );
+		
+		/* Removes the generation data from the memory */
+		Generation_free( generation );
 		
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
