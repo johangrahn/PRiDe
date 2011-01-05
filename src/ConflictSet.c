@@ -218,6 +218,9 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	int maxGeneration;
 	Generation *createdGeneration;
 	
+	/*
+	 * Todo: Is this lock necessary if there is only one receiver process that calls this method?
+	 */
 	pthread_mutex_lock( &conflictSet->writeLock );
 	
 	generationPosition = ConflictSet_getGenerationPosition( conflictSet, generationNumber );
@@ -252,12 +255,12 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 				createdGeneration->number = conflictSet->maxGeneration;
 				
 				/* Need to send stabilization here because a new generation have been created */
-				sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );
+				/*sendStabilization( __conf.replicas, conflictSet->maxGeneration, __conf.id,  conflictSet->dboid );*/
 				
 				/* Increate the created generations counter */
 				maxGeneration++;
 				
-				__ERROR( "Created generation %d for stabilization", maxGeneration );
+				/*__ERROR( "Created generation %d for stabilization", maxGeneration );*/
 				
 				/* Need to check if the generation that was created also is completed */
 				if( Generation_isComplete( createdGeneration ) ) {
@@ -265,6 +268,9 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 					EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 				}
 			}
+			
+			ConflictSet_notifyStabilization( conflictSet );
+			
 		}
 		else {
 			__ERROR( "Stabilization message with generation %d is lower than the smalest generation number", generationNumber );
