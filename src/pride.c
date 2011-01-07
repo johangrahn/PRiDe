@@ -163,11 +163,11 @@ int main( int argc, char **argv )
 		
 		
 		// Comment
-		
+		/*
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 	
-		for ( it = 0; it < 100; it++ ) {
+		for ( it = 0; it < 180; it++ ) {
 			methodCallObject = malloc( sizeof( MethodCallObject ) );	
 			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
 			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
@@ -179,7 +179,7 @@ int main( int argc, char **argv )
 		}
 		
 		Transaction_commit( &transaction );
-		
+		*/
 	
 	
 		Transaction_begin( &transaction, bdbEnv, conflictSetB );

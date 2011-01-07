@@ -21,11 +21,11 @@
 #ifndef NDEBUG
 	#define __DEBUG(fmt, ...) fprintf (__conf.log, "[%d] " fmt "\n", __conf.id, ##__VA_ARGS__ ); fflush( __conf.log )
 	#define __WARNING(fmt, ...) fprintf (__conf.log, "\n[%d] WARNING: " fmt "\n\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
-	#define __ERROR(fmt, ...) fprintf (__conf.log, "[%d] ERROR: " fmt "\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
-	#define __TIME(fmt, ...) fprintf( __conf.log, "[%d] TIME: " fmt " seconds \n",  __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
 #else
 	#define __DEBUG(fmt, ...) 
 	#define __WARNING(fmt, ...) 
-	#define __ERROR(fmt, ...) 
 #endif
 
+#define __ERROR(fmt, ...) fprintf (__conf.log, "[%d] ERROR: " fmt "\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
+#define __TIME(fmt, ...) fprintf( __conf.log, "[%d] TIME: " fmt " seconds \n",  __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
+#define __PRINT(fmt, ...) fprintf (__conf.log, "[%d] " fmt "\n", __conf.id, ##__VA_ARGS__ ); fflush( __conf.log )

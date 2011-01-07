@@ -97,6 +97,9 @@ int ConflictSet_isEmpty( ConflictSet *conflictSet );
 /* Checks so that there are no errors in the conflict set */
 int ConflictSet_checkIntegrity( ConflictSet *conflictSet ); 
 
+/* Checks if a given generation is complete, notify the conflict resolution process if so */
+void ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, Generation *generation );
+
 /* Returns the number of generations in the conflict set */
 int ConflictSet_getSize( ConflictSet *conflictSet );
 
@@ -107,11 +110,12 @@ int ConflictSet_isFull( ConflictSet *conflictSet );
 ConflictSet* ConflictSet_createCopy( ConflictSet *conflictSet ); 
 
 /* Creates a new generation in the conflict set */
-void ConflictSet_createNewGeneration( ConflictSet *conflictSet );
+Generation* ConflictSet_createNewGeneration( ConflictSet *conflictSet );
 
 /* Fetches the array position where the given generation is */
 int ConflictSet_getGenerationPosition( ConflictSet *conflictSet, int generation );
 
+void ConflictSet_setRemoteData( ConflictSet *conflictSet, Generation *gen, int replicaId, MethodCallObject *mco);
 /* 
  * Pops out the oldest generation in the conflict set
  * Returns NULL if there are no generations available
