@@ -6,8 +6,8 @@ PROJECT( pride )
 SET( EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR} )
 
 # Sets stricter compile flags for better development 
-SET( CMAKE_C_FLAGS "-g -Wall" )
-SET( CMAKE_C_FLAGS_DEBUG "-g" )
+SET( CMAKE_C_FLAGS "" )
+SET( CMAKE_C_FLAGS_DEBUG "-g -Wall" )
 
 IF(UNIX)
 	MESSAGE( "Linux System")
@@ -27,6 +27,7 @@ ELSE( NUM_REPLICAS )
 	SET (NUM_REPLICAS "-DPRIDE_NUM_REPICAS=2" )
 ENDIF( NUM_REPLICAS )
 
+MESSAGE( "Number of replicas configured: ${NUM_REPLICAS}" )
 FIND_PACKAGE(PkgConfig)
 PKG_CHECK_MODULES(GLIB glib-2.0)
 
