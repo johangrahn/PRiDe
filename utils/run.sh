@@ -6,19 +6,36 @@
 # Configurations 
 BINARY=../build/pride 
 REPLICAS=2
+BUILD_TYPE="debug"
 START_PORT=50000
+
+# Tell bash to quit if any commands fails
+set -e
 
 # Chedck if the number of replicas is included 
 if [ "$#" -gt "0" ] 
 then
 	REPLICAS=$1
+	BUILD_TYPE=$2
 fi
 
 PORT=$START_PORT
 LISTEN_PORT=$START_PORT
 WRITER=""
 
+if [ "$BUILD_TYPE" == "debug" ] 
+then 
+	echo "Building debug binary"
+	cmake -DCMAKE_BUILD_TYPE=Debug -DNUM_REPLICAS=$REPLICAS ..
+else 
+	echo "Building release binary"
+	cmake -DCMAKE_BUILD_TYPE=Release -DNUM_REPLICAS=$REPLICAS ..
+fi 
+
+make
+
 echo "Creating $REPLICAS replicas"
+
 
 for (( i=0; i < $REPLICAS; i++ )) 
 do
