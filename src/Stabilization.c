@@ -102,22 +102,7 @@ void stabilize( GHashTable *objectStore, GHashTable *methods, Generation *genera
 	
 }
 
-int sendStabilization( GSList *replicas, int generation, int replicaId, dboid_t dboid )
-{
-	StabilizationPackage pack;
-	
-	pack.size = sizeof( StabilizationPackage );
-	pack.pack_type = PACK_STAB;
-	pack.replicaId = replicaId;
-	pack.generationNumber = generation;
-	dboidCopy( pack.dboid, dboid, sizeof( pack.dboid ) );
 
-	__DEBUG( "Sending stabilization message for generation %d", generation );
-	 
-	networkSendDataToAll( replicas, &pack, pack.size );
-	
-	return 1;
-}
 
 int sendStabilizationMessage( GSList *replicas, int startGeneration, int endGeneration, int replicaId, dboid_t dboid )
 {

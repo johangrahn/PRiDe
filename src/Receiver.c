@@ -137,9 +137,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 	int						dataPackageSize;
 	int						it;
 	Package					*dataPackage;
-	PropagationPackage 		*propagationPackage;
 	Propagation2Package		*propPackage;
-	StabilizationPackage	*stabilizationPackage;
 	Stabilization2Package 	*stabPackage;
 	ConflictSet				*conflictSet;
 	pthread_mutex_t			*transactionLock;
@@ -162,41 +160,6 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 		
 		/* Detect what type of package it is */
 		switch( dataPackage->pack_type ) {
-			
-			/* The package is a propagation package */
-			case PACK_PROP: 
-				propagationPackage = (PropagationPackage*) bufferPointer;
-				__DEBUG( "Got Propagation package from replica %d with dboid %s on generation %d with %d bytes", propagationPackage->replica_id, propagationPackage->dboid, 
-				propagationPackage->methodCallObject.generationNumber, dataPackageSize );
-				__DEBUG( "Propagtion package contains method update: <%s with param0: %d>", propagationPackage->methodCallObject.methodName, propagationPackage->methodCallObject.params[0].paramData.intData );
-				
-				/* Wait for any transaction to complete first */
-				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propagationPackage->dboid );
-				pthread_mutex_lock( transactionLock ); 
-				
-				__DEBUG( "Locked conflict set for propagation integration" );
-				
-				/* Get the conflict set for the update */
-				conflictSet = g_hash_table_lookup( __conf.conflictSets, propagationPackage->dboid );
-			
-				/* Stores the updte inside the conflict set 
-				 * Note that the code create a copy of the method call object so that 
-				 * there is now overrite when new packages arraive 
-				 */  
-				ConflictSet_insertRemoteUpdate( conflictSet, 
-					MethodCallObject_copyObject( &propagationPackage->methodCallObject ), 
-					propagationPackage->replica_id, 
-					propagationPackage->generationNumber );
-				
-				/* Notifies the conflict that it is time to send stabilization messages */	
-				ConflictSet_notifyStabilization( conflictSet );
-				
-				pthread_mutex_unlock( transactionLock );
-				
-				__DEBUG( "Unlocked propagation lock" );
-				
-			break;
-			
 			
 			case PACK_PROP2:
 				propPackage = (Propagation2Package *) bufferPointer;
@@ -232,28 +195,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				/* Unlock the conflict set */
 				pthread_mutex_unlock( transactionLock );
 			break;
-			
-			
-			/* It is a stabilization package */
-			case PACK_STAB: 
-				stabilizationPackage = (StabilizationPackage *) bufferPointer;
-				__DEBUG( "Got stabilization package from replica %d with dboid %s on generation %d with %d bytes", stabilizationPackage->replicaId, stabilizationPackage->dboid,  
-				stabilizationPackage->generationNumber, dataPackageSize );
 				
-				/* Wait for any transaction to complete first */
-				transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabilizationPackage->dboid );
-				pthread_mutex_lock( transactionLock );
-				
-				/* Get the conflict set for the update */
-				conflictSet = g_hash_table_lookup( __conf.conflictSets, stabilizationPackage->dboid );
-				
-				ConflictSet_updateStabilization( conflictSet, stabilizationPackage->generationNumber, stabilizationPackage->replicaId);
-				
-				/* Unlock the conflict set */
-				pthread_mutex_unlock( transactionLock );
-			break;
-			
-			
 			/* Handler for the improved stabilization package */
 			case PACK_STAB2:
 				stabPackage = (Stabilization2Package *) bufferPointer;

@@ -163,7 +163,7 @@ int main( int argc, char **argv )
 		
 		
 		// Comment
-		/*
+		
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 	
@@ -179,7 +179,7 @@ int main( int argc, char **argv )
 		}
 		
 		Transaction_commit( &transaction );
-		*/
+		
 	
 	
 		Transaction_begin( &transaction, bdbEnv, conflictSetB );

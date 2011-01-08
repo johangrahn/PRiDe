@@ -36,16 +36,6 @@ typedef struct _Package {
 	enum package_type pack_type;	
 } Package;
 
-typedef struct _PropagationPackage {
-	int size;
-	enum package_type pack_type;
-	
-	/* Data */
-	int replica_id;
-	MethodCallObject methodCallObject;
-	int generationNumber;
-	char dboid[40];
-} PropagationPackage;
 
 typedef struct _Propagation2Package {
 	int size;
@@ -56,17 +46,6 @@ typedef struct _Propagation2Package {
 	int numberOfMethodCalls;
 	MethodCallObject objects[1];
 } Propagation2Package;
-
-typedef struct _StabilizationPackage {
-	int size;
-	enum package_type pack_type;
-	
-	/* Data */
-	int replicaId;
-	int generationNumber;	
-	char dboid[40];
-	
-} StabilizationPackage;
 
 typedef struct _Stabilization2Package {
 	int size;
