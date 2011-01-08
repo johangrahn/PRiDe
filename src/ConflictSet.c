@@ -74,8 +74,10 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 
 void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject, int sourceReplicaId, int sourceGeneration )
 {
-	Generation *gen;
-	int generationPosition;
+	Generation 	*gen;
+	int 		generationPosition;
+	int 		maxGen;
+	int 		it;
 	
 	generationPosition = -1;
 	
@@ -90,6 +92,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 		
 		/* Insert the data into the newly created generation */
 		ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
+		
+		__DEBUG( "Inserting generation information into generation %d", gen->number );
 		
 		/* Perform conflict resolution if complete */
 		ConflictSet_checkGenerationComplete( conflictSet, gen );	
@@ -110,7 +114,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			
 			/* Insert the data into the newly created generation */
 			ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
-	
+			
+			__DEBUG( "Inserting generation information into generation %d", gen->number );
+			
 			/* Perform conflict resolution if complete */
 			ConflictSet_checkGenerationComplete( conflictSet, gen );
 		}
@@ -119,35 +125,35 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 			/* Check if the generation is within the allowed span of valid generations */	
 			if( sourceGeneration >= conflictSet->minGeneration && 
 				( sourceGeneration - conflictSet->minGeneration ) <= conflictSet->numberOfGenerations )	
-			{			
-				/* Create generations until the source generation is reached */
-				while( 1 ) 
+			{		
+				
+				maxGen = conflictSet->maxGeneration;
+				
+				/* Create the number of generations that is needed to store information about 
+				 * the remote generation 
+				 */
+				for( it = 0; it < (sourceGeneration - maxGen); it++ )
 				{
 					/* Create a new generation */
 					gen = ConflictSet_createNewGeneration( conflictSet );
-			
-					/* Check if this generation is the required generation for the remote update */
-					if( conflictSet->maxGeneration == sourceGeneration ) 
-					{
-						/* Insert the data into the newly created generation */
-						ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
+					
+					/* Set that the replica doesn't have any update on this generation */
+					gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+					gen->number = conflictSet->maxGeneration;
+					
+					/* Perform conflict resolution if complete */
+					ConflictSet_checkGenerationComplete( conflictSet, gen );
+					
+				}	
+				
+				/* Insert the data into the newly created generation */
+				ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 
-						/* Perform conflict resolution if complete */
-						ConflictSet_checkGenerationComplete( conflictSet, gen );
-						
-						/* Target generation has been reached, no need to continue */
-						break;			
-					}
-					else 
-					{
-						/* Set that the replica doesn't have any update on this generation */
-						gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
-						gen->number = conflictSet->maxGeneration;
-						
-						/* Perform conflict resolution if complete */
-						ConflictSet_checkGenerationComplete( conflictSet, gen );
-					}
-				}
+				__DEBUG( "Inserting generation information into generation %d", gen->number );
+
+				/* Perform conflict resolution if complete */
+				ConflictSet_checkGenerationComplete( conflictSet, gen );
+				
 			}
 			else 
 			{
