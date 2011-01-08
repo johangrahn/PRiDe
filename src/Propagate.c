@@ -7,25 +7,6 @@
 
 #include <math.h>
 
-void propagate( MethodCallObject *methodCallObject, GSList *replicas, dboid_t dboid )
-{
-	PropagationPackage ppack;
-	
-	/* Create the propagation package */
-	ppack.size = sizeof( PropagationPackage );
-	ppack.pack_type = PACK_PROP;
-	ppack.replica_id = __conf.id;
-	dboidCopy( ppack.dboid, dboid, sizeof( ppack.dboid ) );
-	
-	ppack.methodCallObject = *methodCallObject;
-	ppack.generationNumber = methodCallObject->generationNumber;
-	
-	__DEBUG( "Propagating method %s with id: %s ", methodCallObject->methodName, dboid );
-
-	networkSendDataToAll( replicas, &ppack, ppack.size );
-}
-
-
 void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 {
 	Propagation2Package *ppack;
@@ -38,7 +19,7 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 	int updatesInPackage;	
 	void *data;
 	
-	packSize = 10;
+	packSize = PROP_PACK_SIZE;
 	
 	numCalls = g_slist_length( methodCalls );
 	updatesLeft = numCalls;
@@ -51,9 +32,9 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 	for( it = 0; it < numberPackages; it++ )
 	{
 		/* Create memory for the package + the memory for the updates in the package  */
-		if(updatesLeft > 10 )
+		if(updatesLeft > packSize )
 		{
-			updatesInPackage = 10;
+			updatesInPackage = packSize;
 		}
 		else
 		{

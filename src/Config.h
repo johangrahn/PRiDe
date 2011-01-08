@@ -25,6 +25,13 @@
 #include <fcntl.h>
 #include <sys/time.h>
 
+// Defines the maximum number of package that will be send each time 
+#ifndef PROP_PACK_SIZE 
+#define PROP_PACK_SIZE 10 
+#endif
+
+
+
 #include "ConflictSet.h"
 #include "ObjectStore.h"
 
