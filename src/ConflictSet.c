@@ -197,56 +197,48 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	 */
 	pthread_mutex_lock( &conflictSet->writeLock );
 	
+	/* Checks if the generation exists in the conflict set, if not, create it */
 	generationPosition = ConflictSet_getGenerationPosition( conflictSet, generationNumber );
-	if( generationPosition != -1 ) {
+	if( generationPosition != -1 ) 
+	{
+		/* Generation exists */
 		conflictSet->generations[generationPosition].generationType[replicaId] = GEN_NO_UPDATE;
 	
 		__DEBUG( "Added stabilization information for generation %d from replica %d", generationNumber, replicaId );
 		
-		if( Generation_isComplete( &conflictSet->generations[generationPosition] ) ) {
-			__DEBUG( "Generation %d is complete for dboid %s", generationNumber, conflictSet->dboid );
-			EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
-		}
+		ConflictSet_checkGenerationComplete( conflictSet, &conflictSet->generations[generationPosition] );
 	}
-	else {
-		__DEBUG( "Trying to insert stabilization in generation %d into generation that doesn't exists, max is %d ", generationNumber, conflictSet->maxGeneration );
-		__DEBUG( "Inserting stabilization message into generation %d that needs to be created", generationNumber );
+	else 
+	{
+		__DEBUG( "Generation %d needed for storing stabilization info doesn't exists, trying to create..." );
 		
 		/*  
 		 * Generation is not found, need to check if the generation is higher than 
 		 * the maximum generation, then we need to create new generations to that given generation 
 		 */
 		maxGeneration = conflictSet->maxGeneration + 1;
-		if( maxGeneration <= generationNumber ) {
-			
+		if( maxGeneration <= generationNumber ) 
+		{	
 			/* Create the number of generations that is needed to store the stabilization */
-			while( maxGeneration <= generationNumber ) {
-				ConflictSet_createNewGeneration( conflictSet );
-				createdGeneration = &(conflictSet->generations[conflictSet->maxPosition]);
-				
+			while( maxGeneration <= generationNumber ) 
+			{
+				createdGeneration = ConflictSet_createNewGeneration( conflictSet );				
 				createdGeneration->generationType[__conf.id] = GEN_NO_UPDATE;
 				createdGeneration->generationType[replicaId] = GEN_NO_UPDATE;
 				createdGeneration->number = conflictSet->maxGeneration;
 				
-				__DEBUG( "Created generation %d for storing stabilization information", createdGeneration->number );
-				
 				/* Increate the created generations counter */
 				maxGeneration++;
 				
-				/*__ERROR( "Created generation %d for stabilization", maxGeneration );*/
-				
-				/* Need to check if the generation that was created also is completed */
-				if( Generation_isComplete( createdGeneration ) ) {
-					__DEBUG( "Generation %d is complete for dboid %s", maxGeneration, conflictSet->dboid );
-					EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
-				}
+				ConflictSet_checkGenerationComplete( conflictSet, &conflictSet->generations[generationPosition] );
 			}
 			
+			__DEBUG( "Created generation %d for storing stabilization information", createdGeneration->number );
 			
 			ConflictSet_notifyStabilization( conflictSet );
-			
 		}
-		else {
+		else 
+		{
 			__ERROR( "Stabilization message with generation %d is lower than the smalest generation number", generationNumber );
 		}
 	}
