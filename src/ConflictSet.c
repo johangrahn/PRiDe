@@ -161,8 +161,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 			}
 			else 
 			{
-				__ERROR( "MCO <%s> with generation %d is not allowed, highest is %d", 
-					methodCallObject->methodName, sourceGeneration, conflictSet->maxGeneration );
+				__ERROR( "MCO <%s> with generation %d is not allowed, lowest is %d,  highest is %d", 
+					methodCallObject->methodName, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
 			}
 		}
 	}
@@ -210,7 +210,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	}
 	else 
 	{
-		__DEBUG( "Generation %d needed for storing stabilization info doesn't exists, trying to create..." );
+		__DEBUG( "Generation %d needed for storing stabilization info doesn't exists, trying to create...", generationNumber );
 		
 		/*  
 		 * Generation is not found, need to check if the generation is higher than 
@@ -431,7 +431,8 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	
 	if( ConflictSet_isEmpty( conflictSet ) ) {
 		
-		__ERROR( "popGeneration(): Conflict set is empty!" );
+		__DEBUG( "popGeneration(): Conflict set is empty!" );
+		
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
 		
@@ -466,7 +467,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	
 	}
 	else {
-		__ERROR( "popGeneration(): Generation %d is not complete", generation->number );
+		__DEBUG( "popGeneration(): Generation %d is not complete", generation->number );
 
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );

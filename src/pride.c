@@ -158,16 +158,10 @@ int main( int argc, char **argv )
 
 	/* Check if the replica is a writer */
 	if( __conf.writer == 1 ) {
-		
-		
-		
-		
-		// Comment
-		
+			
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
-		
 	
-		for ( it = 0; it < 180; it++ ) {
+		for ( it = 0; it < 150; it++ ) {
 			methodCallObject = malloc( sizeof( MethodCallObject ) );	
 			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
 			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
@@ -213,9 +207,9 @@ int main( int argc, char **argv )
 
 		Transaction_commit( &transaction );
 		
-		watch_setValue( 200 );
-		__TIME( "Starting elaped time measure" );
-		timer_mark( &__stable_start );
+		// watch_setValue( 200 );
+		// __TIME( "Starting elaped time measure" );
+		// timer_mark( &__stable_start );
 		
 	}	
 	

@@ -24,9 +24,7 @@
 
 enum package_type {
 	PACK_ID,
-	PACK_PROP,
 	PACK_PROP2,
-	PACK_STAB,
 	PACK_STAB2
 };
 

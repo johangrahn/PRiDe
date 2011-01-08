@@ -202,10 +202,6 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				__DEBUG( "Got stabilization 2 package from replica %d with dboid %s with gen range {%d, %d}", 
 				stabPackage->replicaId, stabPackage->dboid, stabPackage->startGeneration, stabPackage->endGeneration  );
 							
-				/*
-				 * Todo: Insert handler for the package 
-				 */
-				
 				/* Wait for any transaction to complete first */
 				transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabPackage->dboid );
 				pthread_mutex_lock( transactionLock );
@@ -225,7 +221,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 			break;
 			
 			default:
-				__DEBUG( "Unknown package type" );
+				__WARNING( "Unknown package type!!!!!" );
 			break;
 		}
 		
