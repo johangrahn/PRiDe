@@ -72,7 +72,10 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	pthread_mutex_unlock( &conflictSet->writeLock );
 }
 
-void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject *methodCallObject, int sourceReplicaId, int sourceGeneration )
+void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, 
+									 MethodCallObject *methodCallObject, 
+									 int sourceReplicaId, 
+									 int sourceGeneration )
 {
 	Generation 	*gen;
 	int 		generationPosition;
@@ -102,7 +105,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet, MethodCallObject 
 	{ /* The conflict set is not empty */
 		
 		/* Check if the needed generation exists localy */
-		if( sourceGeneration >= conflictSet->minGeneration && sourceGeneration <= conflictSet->maxGeneration ) 
+		if( sourceGeneration >= conflictSet->minGeneration && 
+			sourceGeneration <= conflictSet->maxGeneration ) 
 		{	
 			generationPosition = ConflictSet_getGenerationPosition( conflictSet, sourceGeneration );
 			if( generationPosition == -1 ) 
