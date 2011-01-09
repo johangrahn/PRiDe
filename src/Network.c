@@ -166,7 +166,7 @@ void networkSendDataToAll( GSList *replicas, void *data, int dataSize )
 {
 	GSList *it;
 	int rep_socket;
-	Replica *rep;
+	Replica *replica;
 	
 	/* 
 	 * Create a connection to the replica 
@@ -174,29 +174,35 @@ void networkSendDataToAll( GSList *replicas, void *data, int dataSize )
 	 * Finally, close the connection 
 	 */ 
 	for (it = replicas; it != NULL; it = g_slist_next( it ) ) {
-		rep = it->data;
+		replica = it->data;
 		
-		/* Try to make a connection, if failure, wait 250ms */
-		while(1) {
-			rep_socket = networkCreateTCPSocket( rep->host, rep->port );
-			if( rep_socket == -1 ) {
-				__DEBUG( "Failed to connect to host %s on port %d", rep->host, rep->port );
-				usleep( 25000 );
+		/* Check if connection exists to the replica, otherwise create a new one */
+		if( replica->tcpSocket == -1 ) {
+			/* Try to make a connection, if failure, wait 250ms */
+			while(1) {
+				rep_socket = networkCreateTCPSocket( replica->host, replica->port );
+				if( rep_socket == -1 ) {
+					__DEBUG( "Failed to connect to host %s on port %d", replica->host, replica->port );
+					usleep( 25000 );
+				}
+				else {
+					__DEBUG( "Connection successful to host %s on port %d", replica->host, replica->port );
+					break;
+				}
 			}
-			else {
-				__DEBUG( "Connection successful to host %s on port %d", rep->host, rep->port );
-				break;
-			}
+			
+			replica->tcpSocket = rep_socket;
 		}
+		
 		
 		//__DEBUG( "Sending %lud bytes", sizeof( struct prop_package ) );
 		
-		if( networkSendAll( rep_socket, data, dataSize ) == -1 ) {
+		if( networkSendAll( replica->tcpSocket, data, dataSize ) == -1 ) {
 			__ERROR( "Failed to send propagation data: %s", strerror( errno ) );
 		}
 		
 		/* We are done with this replica, close connection */
-		close( rep_socket );
+		//close( rep_socket );
 		
 	}
 	

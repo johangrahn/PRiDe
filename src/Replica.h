@@ -34,18 +34,11 @@ typedef struct _Replica {
 	int id;
 	char host[REPLICA_HOST_MAX];
 	int port;
-	int socket; /* Socket that is connected to the replica */
+	int tcpSocket; /* Socket handler for the TCP connection to the replica */
 	struct addrinfo socket_info;
 	pthread_mutex_t replica_lock;
 } Replica;
 
-Replica* replica_find_by_id( int id );
-
-/* Check if the replica has a connection to this replica */
-int replica_is_connected( Replica *rep);
-
-/* Check if all the replicas have connections to this replica */
-int replica_is_done( GSList *replicas );
 
 #endif
 

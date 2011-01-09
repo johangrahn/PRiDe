@@ -30,7 +30,9 @@
 #define PROP_PACK_SIZE 10 
 #endif
 
-
+#ifndef PRIDE_MAX_PACK_SIZE
+#define PRIDE_MAX_PACK_SIZE 2048
+#endif
 
 #include "ConflictSet.h"
 #include "ObjectStore.h"

@@ -105,6 +105,8 @@ int main( int argc, char **argv )
 
 	}
 	
+	__PRINT( "Starting up application with replica ID %d", __conf.id );
+	
 	dboidObjectA = dboidCreate( "object_a" );
 	objectA.size = sizeof( objectA );
 	objectA.propertyA = 0;
@@ -161,7 +163,7 @@ int main( int argc, char **argv )
 			
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 	
-		for ( it = 0; it < 150; it++ ) {
+		for ( it = 0; it < 180; it++ ) {
 			methodCallObject = malloc( sizeof( MethodCallObject ) );	
 			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
 			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
@@ -309,7 +311,7 @@ void pride_parse_arg_str( char *string, GSList **replicas )
 	pthread_mutex_init( &rep->replica_lock, NULL );                                   
 	
 	/* Reset socket value */
-	rep->socket = -1;
+	rep->tcpSocket = -1;
 	
 //	__DEBUG( "Adding replica with id %d, host %s and port %d", rep->id, rep->host, rep->port );
 	*replicas = g_slist_append(*replicas, rep);
@@ -324,7 +326,7 @@ void pride_cleanup()
 	for( it = __conf.replicas; it != NULL; it = g_slist_next( it ) ) {
 		rep = it->data;
 		
-		close( rep->socket );
+		close( rep->tcpSocket );
 		
 		/* Removes the replica structure */
 		free( rep );

@@ -38,14 +38,17 @@
 /* Unpack the packed data from the buffer into packages  */
 void recevierHandleData( char *dataBuffer, int dataSize );
 
+/* Fetches the data from the socket into the buffer array */
+int receiverGetPackage( int socket, char *buffer );
+
 void* receiverThread(void *data)
-{	
+{
 	char buffer[2048];
 	int socket;
 	int remote_socket;
 	
 	socklen_t addr_len;
-	int numbytes;
+	int numBytes;
 	struct sockaddr_storage their_addr;
 	fd_set *master, read_fds;
 	int fdmax;
@@ -103,21 +106,23 @@ void* receiverThread(void *data)
 						}
 						
 					}
-					else {					
-						//__DEBUG( "Incoming data" );
-						numbytes = recv(i, buffer, sizeof( buffer ), 0 );
-						__DEBUG( "Recevied  %d bytes", numbytes);
-						if(numbytes > 0 ) {
-							
-							recevierHandleData( buffer, numbytes );
-													
+					else {
+						/* Fetch package from the data stream that is 
+						 * ready in the socket 
+						 */ 
+						numBytes = receiverGetPackage( i, buffer );					
+						if(numBytes > 0 ) 
+						{	
+							recevierHandleData( buffer, numBytes );							
 						}
-						else if( numbytes == 0) {
+						else if( numBytes == 0) 
+						{
 							__DEBUG( "No more data, closing socket...");
 							close( i );
 							FD_CLR( i, master );
 						}	
-						else {
+						else 
+						{
 							__ERROR( "recv: %s", strerror(errno) );
 						}
 					}
@@ -131,7 +136,7 @@ void* receiverThread(void *data)
 }
 
 void recevierHandleData( char *dataBuffer, int dataSize )
-{
+{	
 	char 					*bufferPointer;		/* Pointer to the current data */
 	int 					dataLeft; 			/* How much bytes there are left to handle */
 	int						dataPackageSize;
@@ -233,7 +238,47 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 		
 		__DEBUG( "Remaining bytes: %d", dataLeft );	
 	}
+}
+
+int receiverGetPackage( int socket, char *buffer )
+{
+	int packageLength;
+	int bytes;
+	int received;
 	
+	/* Reads the package length from the stream */
+	if( recv( socket, &packageLength, sizeof(packageLength), MSG_PEEK ) == -1 ) 
+	{
+		__ERROR( "Failed to read length of package" );
+		return -1;
+	}
 	
+	__DEBUG(" Found package with size %d", packageLength );
 	
+	/* Fetch the package from the stream */
+	received = recv( socket, buffer, packageLength, 0 );
+	if( received == -1 ) 
+	{
+		__ERROR( "Failed to read package from stream");
+		return -1;
+	}
+	
+	/* Not all data is fetched, need to fetch again */ 
+	if( received < packageLength ) 
+	{
+		__DEBUG( "Not all data is received, trying again" );
+		while( received < packageLength )
+		{
+			bytes = recv( socket, buffer + received, packageLength, 0 );
+			if( bytes == -1 ) 
+			{
+				__ERROR( "Failed to read package from stream");
+				return -1;
+			}
+			
+			received += bytes;
+		}
+	}
+	
+	return packageLength;
 }
