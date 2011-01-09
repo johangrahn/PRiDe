@@ -34,7 +34,14 @@ fi
 
 make
 
+# Remove all previous pride processes 
+if ps ax | grep -v grep | grep pride > /dev/null
+then
+	killall pride 
+fi 
+
 echo "Creating $REPLICAS replicas"
+
 
 
 for (( i=0; i < $REPLICAS; i++ )) 
@@ -54,8 +61,9 @@ do
 	if [ "$i" == "$[$REPLICAS - 1]" ] 
 	then
 		WRITER="-w"
+	else 
+		WRITER=" "
 	fi 
-	
 	$BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS -f $i.log &
 	
 	echo "Starting replica nr $i"
