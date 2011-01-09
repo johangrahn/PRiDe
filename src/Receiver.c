@@ -147,96 +147,80 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 	ConflictSet				*conflictSet;
 	pthread_mutex_t			*transactionLock;
 	
-	/* Set the pointer to the start */
-	bufferPointer = dataBuffer;
+		
+	if( dataSize < sizeof( Package ) ) {
+		__ERROR( "Data package to smal, aborting" );
+	}
 	
-	dataLeft = dataSize;
+	/* Convert data into a standard package */
+	dataPackage = (Package*) dataBuffer;
+	dataPackageSize = dataPackage->size;
 	
-	/* Parse the data */
-	while( dataLeft > 0 ) {
+	/* Detect what type of package it is */
+	switch( dataPackage->pack_type ) {
 		
-		if( dataLeft < sizeof( Package ) ) {
-			__ERROR( "Data package to smal, aborting" );
-		}
-		
-		/* Convert data into a standard package */
-		dataPackage = (Package*) bufferPointer;
-		dataPackageSize = dataPackage->size;
-		
-		/* Detect what type of package it is */
-		switch( dataPackage->pack_type ) {
+		case PACK_PROP2:
+			propPackage = (Propagation2Package *) dataBuffer;
 			
-			case PACK_PROP2:
-				propPackage = (Propagation2Package *) bufferPointer;
-				
-				__DEBUG( "Got propagation 2 package from replica %d with dboid %s", propPackage->replica_id, propPackage->dboid );
-				__DEBUG( "Propagation package contains %d generations ", propPackage->numberOfMethodCalls );
-				
-				/* Wait for any transaction to complete first */
-				transactionLock = g_hash_table_lookup( __conf.transactionLocks, propPackage->dboid );
-				pthread_mutex_lock( transactionLock );
-				
-				/* Get the conflict set for the update */
-				conflictSet = g_hash_table_lookup( __conf.conflictSets, propPackage->dboid );
-				
-				/* Inserts all updates */ 	
-				for( it = 0; it < propPackage->numberOfMethodCalls; it++ ) 
-				{
-					__DEBUG( "Iserting method %s", propPackage->objects[it].methodName );
-					/* Stores the updte inside the conflict set 
-					 * Note that the code create a copy of the method call object so that 
-					 * there is now overrite when new packages arraive 
-					 */  
-					ConflictSet_insertRemoteUpdate( conflictSet, 
-						MethodCallObject_copyObject( &propPackage->objects[it] ), 
-						propPackage->replica_id, 
-						propPackage->objects[it].generationNumber );
-				}
-				
-				/* Notifies the conflict that it is time to send stabilization messages */	
-				ConflictSet_notifyStabilization( conflictSet );
-				
-				
-				/* Unlock the conflict set */
-				pthread_mutex_unlock( transactionLock );
-			break;
-				
-			/* Handler for the improved stabilization package */
-			case PACK_STAB2:
-				stabPackage = (Stabilization2Package *) bufferPointer;
-				__DEBUG( "Got stabilization 2 package from replica %d with dboid %s with gen range {%d, %d}", 
-				stabPackage->replicaId, stabPackage->dboid, stabPackage->startGeneration, stabPackage->endGeneration  );
-							
-				/* Wait for any transaction to complete first */
-				transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabPackage->dboid );
-				pthread_mutex_lock( transactionLock );
-				
-				/* Get the conflict set for the update */
-				conflictSet = g_hash_table_lookup( __conf.conflictSets, stabPackage->dboid );
-				
-				/* Inserts all stabilization messages into the conflict set */
-				for( it = stabPackage->startGeneration; it <= stabPackage->endGeneration; it++ )
-				{
-					ConflictSet_updateStabilization( conflictSet, it, stabPackage->replicaId);
-				}
-				
-				/* Unlock the conflict set */
-				pthread_mutex_unlock( transactionLock );
-				
-			break;
+			__DEBUG( "Got propagation 2 package from replica %d with dboid %s", propPackage->replica_id, propPackage->dboid );
+			__DEBUG( "Propagation package contains %d generations ", propPackage->numberOfMethodCalls );
 			
-			default:
-				__WARNING( "Unknown package type!!!!!" );
-			break;
-		}
+			/* Wait for any transaction to complete first */
+			transactionLock = g_hash_table_lookup( __conf.transactionLocks, propPackage->dboid );
+			pthread_mutex_lock( transactionLock );
+			
+			/* Get the conflict set for the update */
+			conflictSet = g_hash_table_lookup( __conf.conflictSets, propPackage->dboid );
+			
+			/* Inserts all updates */ 	
+			for( it = 0; it < propPackage->numberOfMethodCalls; it++ ) 
+			{
+				__DEBUG( "Iserting method %s", propPackage->objects[it].methodName );
+				/* Stores the updte inside the conflict set 
+				 * Note that the code create a copy of the method call object so that 
+				 * there is now overrite when new packages arraive 
+				 */  
+				ConflictSet_insertRemoteUpdate( conflictSet, 
+					MethodCallObject_copyObject( &propPackage->objects[it] ), 
+					propPackage->replica_id, 
+					propPackage->objects[it].generationNumber );
+			}
+			
+			/* Notifies the conflict that it is time to send stabilization messages */	
+			ConflictSet_notifyStabilization( conflictSet );
+			
+			
+			/* Unlock the conflict set */
+			pthread_mutex_unlock( transactionLock );
+		break;
+			
+		/* Handler for the improved stabilization package */
+		case PACK_STAB2:
+			stabPackage = (Stabilization2Package *) dataBuffer;
+			__DEBUG( "Got stabilization 2 package from replica %d with dboid %s with gen range {%d, %d}", 
+			stabPackage->replicaId, stabPackage->dboid, stabPackage->startGeneration, stabPackage->endGeneration  );
+						
+			/* Wait for any transaction to complete first */
+			transactionLock = g_hash_table_lookup( __conf.transactionLocks, stabPackage->dboid );
+			pthread_mutex_lock( transactionLock );
+			
+			/* Get the conflict set for the update */
+			conflictSet = g_hash_table_lookup( __conf.conflictSets, stabPackage->dboid );
+			
+			/* Inserts all stabilization messages into the conflict set */
+			for( it = stabPackage->startGeneration; it <= stabPackage->endGeneration; it++ )
+			{
+				ConflictSet_updateStabilization( conflictSet, it, stabPackage->replicaId);
+			}
+			
+			/* Unlock the conflict set */
+			pthread_mutex_unlock( transactionLock );
+			
+		break;
 		
-		/* Move data pointer to the next package */
-		bufferPointer = bufferPointer + dataPackageSize;
-		
-		/* Counting down how much data is left to analyze */
-		dataLeft = dataLeft - dataPackageSize;
-		
-		__DEBUG( "Remaining bytes: %d", dataLeft );	
+		default:
+			__WARNING( "Unknown package type!!!!!" );
+		break;
 	}
 }
 
