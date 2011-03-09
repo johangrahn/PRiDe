@@ -60,6 +60,12 @@ void* conflictResolutionThread( void *data)
 				__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
 				methodCallObject = firstPolicy( generation );
+				if( methodCallObject == NULL )
+				{
+					__ERROR( "Failed to get the stable update from the generation %d", generation->number );
+					Generation_free( generation );
+					continue;
+				}
 				
 				__DEBUG( "Add update to object with dboid %s: <%s with param0: %d>", conflictSet->dboid, methodCallObject->methodName, methodCallObject->params[0].paramData.intData );
 			

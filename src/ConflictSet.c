@@ -59,12 +59,11 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 	gen = ConflictSet_createNewGeneration( conflictSet );
 	
 	gen->generationType[__conf.id] = GEN_UPDATE;
-	gen->generationData[__conf.id].methodCallObject = methodCallObject;
-	gen->number = conflictSet->maxGeneration;	
+	gen->generationData[__conf.id].methodCallObject = methodCallObject;	
 
-	methodCallObject->generationNumber = conflictSet->maxGeneration;
+	methodCallObject->generationNumber = gen->number;
 	
-	__DEBUG( "Added generation %d for method <%s>", conflictSet->maxGeneration, methodCallObject->methodName );
+	__DEBUG( "Added generation %d for method <%s>", gen->number, methodCallObject->methodName );
 	
 	__DEBUG( "Unlocking conflict set for writing local update" );
 	
@@ -96,6 +95,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 		/* Insert the data into the newly created generation */
 		ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 		
+		/* Set local info to NONE since the generation have been created */
+		gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+			
 		__DEBUG( "Inserting generation information into generation %d", gen->number );
 		
 		/* Perform conflict resolution if complete */
@@ -143,7 +145,6 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 					
 					/* Set that the replica doesn't have any update on this generation */
 					gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
-					gen->number = conflictSet->maxGeneration;
 					
 					/* Perform conflict resolution if complete */
 					ConflictSet_checkGenerationComplete( conflictSet, gen );
@@ -153,6 +154,9 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 				/* Insert the data into the newly created generation */
 				ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 
+				/* Set local info to NONE since the generation have been created */
+				gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+				
 				__DEBUG( "Inserting generation information into generation %d", gen->number );
 
 				/* Perform conflict resolution if complete */
@@ -161,8 +165,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 			}
 			else 
 			{
-				__ERROR( "MCO <%s> with generation %d is not allowed, lowest is %d,  highest is %d", 
-					methodCallObject->methodName, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
+				__ERROR( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
+					methodCallObject->methodName, sourceReplicaId, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
 			}
 		}
 	}
@@ -178,10 +182,6 @@ void ConflictSet_setRemoteData( ConflictSet *conflictSet, Generation *gen, int r
 {
 	gen->generationType[replicaId] = GEN_UPDATE;
 	gen->generationData[replicaId].methodCallObject = mco;
-	gen->number = conflictSet->maxGeneration;
-		
-	/* Set that the replica doesn't have any update on this generation */
-	gen->generationType[__conf.id] = GEN_NO_UPDATE;
 }
 	
 
@@ -212,6 +212,15 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	{
 		__DEBUG( "Generation %d needed for storing stabilization info doesn't exists, trying to create...", generationNumber );
 		
+		if( generationNumber < conflictSet->minGeneration && conflictSet->minGeneration != -1 ) 
+		{
+			//__ERROR("FFUUUUU!!!");
+			//__DEBUG( "Canceled generation creation for generation %d, min is %d, max is %d  ", 
+			//	generationNumber, conflictSet->minGeneration, conflictSet->maxGeneration
+			//);
+			pthread_mutex_unlock( &conflictSet->writeLock );
+			return;
+		}
 		/*  
 		 * Generation is not found, need to check if the generation is higher than 
 		 * the maximum generation, then we need to create new generations to that given generation 
@@ -239,7 +248,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		}
 		else 
 		{
-			__ERROR( "Stabilization message with generation %d is lower than the smalest generation number", generationNumber );
+			//__ERROR( "Stabilization message with generation %d is lower than the smalest generation number", generationNumber );
 		}
 	}
 	

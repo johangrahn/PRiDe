@@ -17,6 +17,7 @@ if [ "$#" -gt "0" ]
 then
 	REPLICAS=$1
 	BUILD_TYPE=$2
+	WRITERS=$3
 fi
 
 PORT=$START_PORT
@@ -61,10 +62,16 @@ do
 	if [ "$i" == "$[$REPLICAS - 1]" ] 
 	then
 		WRITER="-w"
-	else 
-		WRITER=" "
+	else
+		if [ "$WRITERS" == "1" ] 
+		then 
+			WRITER="-w"
+		else
+			WRITER=""
+		fi
 	fi 
-	$BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS -f $i.log &
+	echo $BINARY -i $i $WRITER -l $LISTEN_PORT $HOSTS -f $i.log 
+	$BINARY -i $i  $WRITER -l $LISTEN_PORT $HOSTS -f $i.log &
 	
 	echo "Starting replica nr $i"
 	# Increment the listen port

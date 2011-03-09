@@ -81,6 +81,7 @@ int main( int argc, char **argv )
 	pthread_mutex_t		transactionLockA, transactionLockB;
 	Transaction 		transaction;
 	int 				it;
+	int 				randomNumber;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -162,14 +163,18 @@ int main( int argc, char **argv )
 	if( __conf.writer == 1 ) {
 			
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
-	
-		for ( it = 0; it < 180; it++ ) {
+		
+		srand( time( NULL ) );
+		for ( it = 0; it < 30; it++ ) {
+			
+			randomNumber = rand() % 10;
+			
 			methodCallObject = malloc( sizeof( MethodCallObject ) );	
 			strncpy( methodCallObject->databaseObjectId, dboidObjectA, sizeof(methodCallObject->databaseObjectId ) );
 			strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
 			methodCallObject->paramSize = 1;
 			methodCallObject->params[0].paramType = paramTypeInt;
-			methodCallObject->params[0].paramData.intData = 1;
+			methodCallObject->params[0].paramData.intData = randomNumber;
 		
 			Transaction_update( &transaction, methodCallObject );
 		}
@@ -177,7 +182,7 @@ int main( int argc, char **argv )
 		Transaction_commit( &transaction );
 		
 	
-	
+		/*
 		Transaction_begin( &transaction, bdbEnv, conflictSetB );
 		
 		methodCallObject = malloc( sizeof( MethodCallObject ) );
@@ -208,7 +213,7 @@ int main( int argc, char **argv )
 		Transaction_update( &transaction, methodCallObject );		
 
 		Transaction_commit( &transaction );
-		
+		*/
 		// watch_setValue( 200 );
 		// __TIME( "Starting elaped time measure" );
 		// timer_mark( &__stable_start );
