@@ -107,7 +107,8 @@ int main( int argc, char **argv )
 	}
 	
 	__PRINT( "Starting up application with replica ID %d", __conf.id );
-	
+	__PRINT( "Number of replicas: %d", PRIDE_NUM_REPLICAS );
+
 	dboidObjectA = dboidCreate( "object_a" );
 	objectA.size = sizeof( objectA );
 	objectA.propertyA = 0;
@@ -165,7 +166,7 @@ int main( int argc, char **argv )
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 		srand( time( NULL ) );
-		for ( it = 0; it < 30; it++ ) {
+		for ( it = 0; it < 10; it++ ) {
 			
 			randomNumber = rand() % 10;
 			

@@ -80,9 +80,11 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 	int 		generationPosition;
 	int 		maxGen;
 	int 		it;
-	
-	generationPosition = -1;
-	
+	int 		failure;
+
+	generationPosition 	= -1;
+	failure 			= 0;
+
 	/* Lock the structure */
 	pthread_mutex_lock( &conflictSet->writeLock );
 	
@@ -96,7 +98,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 		ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 		
 		/* Set local info to NONE since the generation have been created */
-		gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+		gen->generationType[__conf.id] = GEN_NO_UPDATE;
 			
 		__DEBUG( "Inserting generation information into generation %d", gen->number );
 		
@@ -144,7 +146,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 					gen = ConflictSet_createNewGeneration( conflictSet );
 					
 					/* Set that the replica doesn't have any update on this generation */
-					gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+					gen->generationType[__conf.id] = GEN_NO_UPDATE;
 					
 					/* Perform conflict resolution if complete */
 					ConflictSet_checkGenerationComplete( conflictSet, gen );
@@ -155,7 +157,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 				ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 
 				/* Set local info to NONE since the generation have been created */
-				gen->generationType[sourceReplicaId] = GEN_NO_UPDATE;
+				gen->generationType[__conf.id] = GEN_NO_UPDATE;
 				
 				__DEBUG( "Inserting generation information into generation %d", gen->number );
 
@@ -167,13 +169,19 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 			{
 				__ERROR( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
 					methodCallObject->methodName, sourceReplicaId, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
+				
+				/* Notify about the failure */
+				failure = 1;
 			}
 		}
 	}
 	
-	__DEBUG( "Adding remote update from replica %d on generation %d", 
-		sourceReplicaId, conflictSet->maxGeneration );
-		
+	if( failure == 0 )
+	{
+		__DEBUG( "Adding remote update from replica %d on generation %d", 
+				sourceReplicaId, conflictSet->maxGeneration );
+	}	
+
 	__DEBUG( "Unlocking the conflict set for writing remote update" );
 	pthread_mutex_unlock( &conflictSet->writeLock );	
 }
@@ -336,6 +344,8 @@ void ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, Generation *
 		__DEBUG( "Generation %d is complete for dboid %s", generation->number, conflictSet->dboid );
 		EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 	}
+
+	__DEBUG( "Generation %d is not complete", generation->number );
 }
 
 int ConflictSet_isEmpty( ConflictSet *conflictSet )

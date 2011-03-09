@@ -17,7 +17,7 @@
  */
 
 #include "Generation.h"
-
+#include "Debug.h"
 #include <stdlib.h>
 
 void Generation_init( Generation *generation )
@@ -89,6 +89,7 @@ int Generation_isComplete( Generation *generation )
 	 */
 	for( it = 0; it < PRIDE_NUM_REPLICAS; it++ ) {
 		if (generation->generationType[ it ] == GEN_NONE ) {
+			__DEBUG( "Replica %d on generation %d is empty", it, generation->number );
 			return 0;
 		}
 	}

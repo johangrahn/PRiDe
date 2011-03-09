@@ -18,6 +18,8 @@
 
 #include "Timer.h"
 	
+#include <stdlib.h>
+
 void timer_mark( timeval *t)
 {
 	gettimeofday( t, NULL );
