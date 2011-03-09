@@ -167,7 +167,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 			}
 			else 
 			{
-				__ERROR( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
+				__DEBUG( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
 					methodCallObject->methodName, sourceReplicaId, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
 				
 				/* Notify about the failure */
@@ -313,7 +313,7 @@ void ConflictSet_notifyStabilization( ConflictSet *conflictSet )
 	if( conflictSet->stabilizedGeneration == -1) 
 	{
 		startGeneration = 0;
-		endGeneration = conflictSet->maxGeneration;
+		endGeneration = conflictSet->maxGeneration - 1;
 	}
 	else
 	{
@@ -323,7 +323,7 @@ void ConflictSet_notifyStabilization( ConflictSet *conflictSet )
 		/* Stabilize all generations that have been created
 		 * This insures that the maximum number of generations are send to the replicas 
 		 */
-		endGeneration = conflictSet->maxGeneration;
+		endGeneration = conflictSet->maxGeneration - 1;
 	}
 
 	/* Check that message is required */
