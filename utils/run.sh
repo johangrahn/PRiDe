@@ -36,10 +36,7 @@ fi
 make
 
 # Remove all previous pride processes 
-if ps ax | grep -v grep | grep pride > /dev/null
-then
-	killall pride 
-fi 
+pkill pride 
 
 echo "Creating $REPLICAS replicas"
 
