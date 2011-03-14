@@ -74,5 +74,8 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 		
 		/* Remove all data for the package */
 		free( ppack );
+		
+		/* Remove the updates that have been send */
+		updatesLeft = updatesLeft - updatesInPackage;
 	}
 }
