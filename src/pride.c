@@ -82,6 +82,7 @@ int main( int argc, char **argv )
 	Transaction 		transaction;
 	int 				it;
 	int 				randomNumber;
+	int 				numberOfUpdates;
 	
 	signal(SIGINT, pride_sighandler );
 	signal(SIGTERM, pride_sighandler );
@@ -161,12 +162,45 @@ int main( int argc, char **argv )
 	pthread_mutex_unlock( &__conf.listenMutex );
 
 	/* Check if the replica is a writer */
-	if( __conf.writer == 1 ) {
+	if( __conf.writer == 1 ) 
+	{
+		
+		FILE *runFile;
+		char line[80];
+		char fileName[30];
+
+		numberOfUpdates = 0;
+	
+		sprintf( fileName, "%d.conf", __conf.id );
+		/* Open the run file to read from */
+		runFile = fopen( fileName, "r" );
+		if( runFile == NULL )
+		{
+			__ERROR( "Failed to open run file: %s ", fileName );
+		}
+		else
+		{
 			
+			/* Read the number of updates */
+			if( fgets( line, 80, runFile ) != NULL ) 
+			{	
+				numberOfUpdates = strtol( line, NULL, 10 );
+				__ERROR( "Number of updates: %d", numberOfUpdates );
+				//numberOfUpdates = atoi( line );
+			}
+			else
+			{
+				__ERROR( "Failed to read line");
+			}
+			//__DEBUG( "Number of updates to perform: %d", numberOfUpdates );
+			fclose( runFile );
+		}
+		
+
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 		srand( time( NULL ) );
-		for ( it = 0; it < 10; it++ ) {
+		for ( it = 0; it < 32; it++ ) {
 			
 			randomNumber = rand() % 10;
 			
@@ -181,46 +215,7 @@ int main( int argc, char **argv )
 		}
 		
 		Transaction_commit( &transaction );
-		
-	
-		/*
-		Transaction_begin( &transaction, bdbEnv, conflictSetB );
-		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 3;
-
-		Transaction_update( &transaction, methodCallObject );
-		
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 3;
-
-		Transaction_update( &transaction, methodCallObject );
-			
-		methodCallObject = malloc( sizeof( MethodCallObject ) );
-		strncpy( methodCallObject->databaseObjectId, dboidObjectB, sizeof(methodCallObject->databaseObjectId ) );
-		strncpy( methodCallObject->methodName, "Object_increaseA", strlen("Object_increaseA") + 1 );
-		methodCallObject->paramSize = 1;
-		methodCallObject->params[0].paramType = paramTypeInt;
-		methodCallObject->params[0].paramData.intData = 3;
-
-		Transaction_update( &transaction, methodCallObject );		
-
-		Transaction_commit( &transaction );
-		*/
-		// watch_setValue( 200 );
-		// __TIME( "Starting elaped time measure" );
-		// timer_mark( &__stable_start );
-		
 	}	
-	
 	
 
 	

@@ -89,7 +89,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 void ConflictSet_notifyPropagation( ConflictSet *conflictSet );
 
 /* Notifies the conflict set when it is time to send out stabilization messages for any created generations */
-void ConflictSet_notifyStabilization( ConflictSet *conflictSet );
+void ConflictSet_notifyStabilization( ConflictSet *conflictSet, int endGeneration );
 
 /* Returns 1 if the conflict is empty( no generations), 0 otherwise */
 int ConflictSet_isEmpty( ConflictSet *conflictSet );

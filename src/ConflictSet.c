@@ -56,11 +56,14 @@ void ConflictSet_insertLocalUpdate( ConflictSet *conflictSet, MethodCallObject *
 		exit( 1 );
 	}	
 	
+
 	gen = ConflictSet_createNewGeneration( conflictSet );
 	
+	/* Store local information about the generation */
 	gen->generationType[__conf.id] = GEN_UPDATE;
 	gen->generationData[__conf.id].methodCallObject = methodCallObject;	
 
+	/* Tell the update what generation it has been stored in */
 	methodCallObject->generationNumber = gen->number;
 	
 	__DEBUG( "Added generation %d for method <%s>", gen->number, methodCallObject->methodName );
@@ -97,7 +100,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 		/* Insert the data into the newly created generation */
 		ConflictSet_setRemoteData( conflictSet, gen, sourceReplicaId, methodCallObject );
 		
-		/* Set local info to NONE since the generation have been created */
+		/* Set local info to NO UPDATE since the generation have been created */
 		gen->generationType[__conf.id] = GEN_NO_UPDATE;
 			
 		__DEBUG( "Inserting generation information into generation %d", gen->number );
@@ -198,7 +201,15 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	int generationPosition;
 	int maxGeneration;
 	Generation *createdGeneration;
-	
+
+
+	/* Check if generation is lower than the stabilized generation */
+	if( generationNumber < conflictSet->minGeneration )
+	{
+		__DEBUG( "Failed to update stabilization, gen %d is lower than min gen %d", generationNumber, conflictSet->minGeneration );
+		return;
+	}
+
 	/*
 	 * Todo: Is this lock necessary if there is only one receiver process that calls this method?
 	 * This is needed since conflict set needs to create new generation to store remote stabilization 
@@ -252,7 +263,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 			
 			__DEBUG( "Created generation %d for storing stabilization information", createdGeneration->number );
 			
-			ConflictSet_notifyStabilization( conflictSet );
+			ConflictSet_notifyStabilization( conflictSet, generationNumber );
 		}
 		else 
 		{
@@ -304,27 +315,26 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	g_slist_free( methodCalls );
 }
 
-void ConflictSet_notifyStabilization( ConflictSet *conflictSet )
+void ConflictSet_notifyStabilization( ConflictSet *conflictSet, int endGeneration )
 {
 	int startGeneration;
-	int endGeneration;
 	
 	/* Check if stabilization has been performed before */
 	if( conflictSet->stabilizedGeneration == -1) 
 	{
 		startGeneration = 0;
-		endGeneration = conflictSet->maxGeneration - 1;
 	}
 	else
 	{
 		/* Get the first generation that haven't been stabilized */
 		startGeneration = conflictSet->stabilizedGeneration + 1;
-		
-		/* Stabilize all generations that have been created
-		 * This insures that the maximum number of generations are send to the replicas 
-		 */
-		endGeneration = conflictSet->maxGeneration - 1;
 	}
+
+	/* Stabilize all generations that have been created
+	 * This insures that the maximum number of generations are send to the replicas 
+	 */
+	//endGeneration = conflictSet->maxGeneration;
+
 
 	/* Check that message is required */
 	if( startGeneration <= endGeneration ) 
@@ -433,11 +443,12 @@ Generation* ConflictSet_createNewGeneration( ConflictSet *conflictSet )
 		conflictSet->maxPosition = (conflictSet->maxPosition + 1 ) % conflictSet->numberOfGenerations;
 		conflictSet->maxGeneration++;
 	}
-	
+
+	/* Set default values to the new generation */
 	Generation_init( &conflictSet->generations[conflictSet->maxPosition] );
 	conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
 	
-	return &conflictSet->generations[conflictSet->maxPosition];
+	return &conflictSet->generations[ conflictSet->maxPosition ];
 }
 
 

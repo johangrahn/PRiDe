@@ -141,6 +141,7 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 	int 					dataLeft; 			/* How much bytes there are left to handle */
 	int						dataPackageSize;
 	int						it;
+	int						lastGeneration;
 	Package					*dataPackage;
 	Propagation2Package		*propPackage;
 	Stabilization2Package 	*stabPackage;
@@ -184,10 +185,12 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 					MethodCallObject_copyObject( &propPackage->objects[it] ), 
 					propPackage->replica_id, 
 					propPackage->objects[it].generationNumber );
+
+				lastGeneration = propPackage->objects[it].generationNumber;
 			}
 			
 			/* Notifies the conflict that it is time to send stabilization messages */	
-			ConflictSet_notifyStabilization( conflictSet );
+			ConflictSet_notifyStabilization( conflictSet, lastGeneration );
 			
 			
 			/* Unlock the conflict set */

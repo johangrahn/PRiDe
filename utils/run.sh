@@ -10,7 +10,7 @@ BUILD_TYPE="debug"
 START_PORT=50000
 
 # Tell bash to quit if any commands fails
-set -e
+# set -e
 
 # Chedck if the number of replicas is included 
 if [ "$#" -gt "0" ] 
