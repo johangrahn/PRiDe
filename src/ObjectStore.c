@@ -84,7 +84,7 @@ void ObjectStore_put( ObjectStore *objectStore, dboid_t dboid, void *object, siz
 		exit( 1 );
 	}
 	
-	__DEBUG( "Stored object with dboid %s", dboid );
+	//__DEBUG( "Stored object with dboid %s", dboid );
 }
 
 
@@ -115,5 +115,5 @@ void ObjectStore_fetch( ObjectStore *objectStore, dboid_t dboid, void **object, 
 	
 	*object = value.data;
 	
-	__DEBUG( "Fetched object with dboid %s", dboid );
+	//__DEBUG( "Fetched object with dboid %s", dboid );
 }

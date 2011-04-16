@@ -163,7 +163,12 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 		case PACK_PROP2:
 			propPackage = (Propagation2Package *) dataBuffer;
 			
-			__DEBUG( "Got propagation 2 package from replica %d with dboid %s", propPackage->replica_id, propPackage->dboid );
+			__DEBUG( "Got propagation 2 package from replica %d with dboid %s with range {%d,%d}", 
+					propPackage->replica_id, 
+					propPackage->dboid, 
+					propPackage->objects[0].generationNumber,
+					propPackage->objects[ propPackage->numberOfMethodCalls -1 ].generationNumber );
+
 			__DEBUG( "Propagation package contains %d generations ", propPackage->numberOfMethodCalls );
 			
 			/* Wait for any transaction to complete first */
@@ -189,8 +194,11 @@ void recevierHandleData( char *dataBuffer, int dataSize )
 				lastGeneration = propPackage->objects[it].generationNumber;
 			}
 			
+
+			__DEBUG( "Need to stabilize to generation %d", lastGeneration);
 			/* Notifies the conflict that it is time to send stabilization messages */	
 			ConflictSet_notifyStabilization( conflictSet, lastGeneration );
+			
 			
 			
 			/* Unlock the conflict set */

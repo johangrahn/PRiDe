@@ -19,7 +19,10 @@
 #include "Config.h"
 
 #ifndef NDEBUG
-	#define __DEBUG(fmt, ...) fprintf (__conf.log, "[Replica %d] " fmt "\n", __conf.id, ##__VA_ARGS__ ); fflush( __conf.log )
+	
+	time_t __tm;
+
+	#define __DEBUG(fmt, ...) __tm = time( NULL ); fprintf (__conf.log, "[Replica %d | %ju] " fmt "\n", __conf.id, (uintmax_t)__tm, ##__VA_ARGS__); fflush( __conf.log )
 	#define __WARNING(fmt, ...) fprintf (__conf.log, "\n[Replica %d] WARNING: " fmt "\n\n", __conf.id, ##__VA_ARGS__ ) ; fflush( __conf.log )
 #else
 	#define __DEBUG(fmt, ...) 

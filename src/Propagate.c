@@ -12,6 +12,7 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 	Propagation2Package *ppack;
 	int it, it2;
 	int psize;
+	int start, end;
 	int numCalls;
 	int numberPackages; 	/* The number of packages that will be sent */
 	int packSize;			/* The numeber of updates in a package */
@@ -31,7 +32,6 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 	
 	for( it = 0; it < numberPackages; it++ )
 	{
-		/* Create memory for the package + the memory for the updates in the package  */
 		if(updatesLeft > packSize )
 		{
 			updatesInPackage = packSize;
@@ -41,6 +41,7 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 			updatesInPackage = updatesLeft;
 		}
 		
+		/* Create memory for the package + the memory for the updates in the package  */
 		psize = sizeof(Propagation2Package) + ( sizeof( MethodCallObject ) * updatesInPackage );
 		ppack = malloc( psize );
 		
@@ -60,6 +61,12 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 			/* Store in the package */
 			ppack->objects[it2] = * (MethodCallObject *) data;
 			
+			if( it2 == 0 )
+			{
+				start = ((MethodCallObject *) data)->generationNumber;
+			}
+
+			end = ((MethodCallObject *) data)->generationNumber;
 			/* 
 			* Remove the update from the list 
 			* This should be equal to using a pop function on a general container structure
@@ -67,7 +74,7 @@ void propagateList( GSList *methodCalls, GSList *replicas, dboid_t dboid )
 			methodCalls = g_slist_remove( methodCalls, data);
 		}
 		
-		__DEBUG( "Propagating %d methods ", updatesInPackage );
+		__DEBUG( "Propagating %d methods with gen range{%d, %d} ", updatesInPackage, start, end );
 		
 		/* Sénd package to all replicas */
 		networkSendDataToAll( replicas, ppack, ppack->size );

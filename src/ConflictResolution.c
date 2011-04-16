@@ -55,7 +55,8 @@ void* conflictResolutionThread( void *data)
 			/* Fetch the generation that is complete */ 
 			generation = ConflictSet_popGeneration( conflictSet );
 		
-			if( generation != NULL) {
+			while( generation != NULL ) 
+			{
 			
 				__DEBUG( "Performing conflict resolution on generation %d", generation->number );
 		
@@ -67,7 +68,7 @@ void* conflictResolutionThread( void *data)
 					continue;
 				}
 				
-				__DEBUG( "Add update to object with dboid %s: <%s with param0: %d>", conflictSet->dboid, methodCallObject->methodName, methodCallObject->params[0].paramData.intData );
+				//__DEBUG( "Add update to object with dboid %s: <%s with param0: %d>", conflictSet->dboid, methodCallObject->methodName, methodCallObject->params[0].paramData.intData );
 			
 				/* Fetches the object that gets the update */
 				ObjectStore_fetch( objectStore, conflictSet->dboid, &object, 0 );
@@ -97,9 +98,8 @@ void* conflictResolutionThread( void *data)
 			
 				/* No need for the generation information */
 				Generation_free( generation );
-			}
-			else {
-				__DEBUG("No generations to resolve");
+				
+				generation = ConflictSet_popGeneration( conflictSet );
 			}
 		}
 	}

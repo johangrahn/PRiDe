@@ -200,7 +200,7 @@ int main( int argc, char **argv )
 		Transaction_begin( &transaction, bdbEnv, conflictSetA );
 		
 		srand( time( NULL ) );
-		for ( it = 0; it < 32; it++ ) {
+		for ( it = 0; it < 1; it++ ) {
 			
 			randomNumber = rand() % 10;
 			

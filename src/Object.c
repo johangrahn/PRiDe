@@ -21,7 +21,7 @@
 
 void Object_increaseA( Object *object, int value )
 {
-	__DEBUG(" Increased value by %d", value );
+	//__DEBUG(" Increased value by %d", value );
 	object->propertyA += value;
 	
 	__PRINT( "Value of object's property A with dboid <%s> is now: %d", object->databaseId, object->propertyA );

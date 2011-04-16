@@ -122,8 +122,8 @@ void ConflictSet_setRemoteData( ConflictSet *conflictSet, Generation *gen, int r
  */
 Generation* ConflictSet_popGeneration( ConflictSet *conflictSet );
 
-/* Prints information about the conflict set to the stream <output> */
-void ConflictSet_showState( ConflictSet *conflictSet, FILE *output );
+/* Displays the status for the conflict set */
+void ConflictSet_showState( ConflictSet *conflictSet );
 
 #endif
 

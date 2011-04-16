@@ -145,8 +145,10 @@ int networkSendAll( int socket, void *data, int length )
 	bytesLeft = length;
 	
 	__DEBUG( "Sending %d bytes", length );
+	
 	/* Sends some amount of data at the time until all is sent */
-	while( totalSent < length ) {
+	while( totalSent < length ) 
+	{
 		sent = send( socket, data + totalSent, bytesLeft, 0);
 		
 		if( sent == -1 ) {

@@ -46,6 +46,9 @@ void Transaction_begin( Transaction *transaction, DB_ENV *databaseEnvironment, C
 	
 	/* Creates a shadow copy of the conflict set */
 	transaction->conflictSet = ConflictSet_createCopy( conflictSet );
+
+	*(transaction->conflictSet) = *conflictSet;
+	__DEBUG( "Shadow copy check: gen %d = %d", transaction->conflictSet->maxGeneration, conflictSet->maxGeneration );
 }
 
 void Transaction_update( Transaction *transaction, MethodCallObject *methodCallObject )

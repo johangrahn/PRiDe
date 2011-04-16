@@ -103,7 +103,7 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 		/* Set local info to NO UPDATE since the generation have been created */
 		gen->generationType[__conf.id] = GEN_NO_UPDATE;
 			
-		__DEBUG( "Inserting generation information into generation %d", gen->number );
+		__DEBUG( "ConflictSet is empty, inserting generation information into generation %d", gen->number );
 		
 		/* Perform conflict resolution if complete */
 		ConflictSet_checkGenerationComplete( conflictSet, gen );	
@@ -147,6 +147,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 				{
 					/* Create a new generation */
 					gen = ConflictSet_createNewGeneration( conflictSet );
+
+					__DEBUG(" Creating generation since gen %d is not available", sourceGeneration );
 					
 					/* Set that the replica doesn't have any update on this generation */
 					gen->generationType[__conf.id] = GEN_NO_UPDATE;
@@ -166,12 +168,17 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 
 				/* Perform conflict resolution if complete */
 				ConflictSet_checkGenerationComplete( conflictSet, gen );
+			
+				/* Send stabilization message for the generations that have
+				 * been created 
+				 */
+				ConflictSet_notifyStabilization( conflictSet, gen->number );
 				
 			}
 			else 
 			{
-				__DEBUG( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
-					methodCallObject->methodName, sourceReplicaId, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
+				//__DEBUG( "MCO <%s> from replica %d with generation %d is not allowed, lowest is %d,  highest is %d", 
+			//		methodCallObject->methodName, sourceReplicaId, sourceGeneration, conflictSet->minGeneration, conflictSet->maxGeneration );
 				
 				/* Notify about the failure */
 				failure = 1;
@@ -184,6 +191,8 @@ void ConflictSet_insertRemoteUpdate( ConflictSet *conflictSet,
 		__DEBUG( "Adding remote update from replica %d on generation %d", 
 				sourceReplicaId, conflictSet->maxGeneration );
 	}	
+
+	ConflictSet_showState( conflictSet );
 
 	__DEBUG( "Unlocking the conflict set for writing remote update" );
 	pthread_mutex_unlock( &conflictSet->writeLock );	
@@ -202,7 +211,14 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	int maxGeneration;
 	Generation *createdGeneration;
 
+	__DEBUG( "updateStabilization()" );
 
+	/* Check if the generation is already stabilized */
+	if( generationNumber < conflictSet->stabilizedGeneration )
+	{
+		return;
+	}
+	
 	/* Check if generation is lower than the stabilized generation */
 	if( generationNumber < conflictSet->minGeneration )
 	{
@@ -225,6 +241,8 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 	
 		__DEBUG( "Added stabilization information for generation %d from replica %d", generationNumber, replicaId );
 		
+		conflictSet->stabilizedGeneration = generationNumber;
+
 		ConflictSet_checkGenerationComplete( conflictSet, &conflictSet->generations[generationPosition] );
 	}
 	else 
@@ -263,6 +281,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 			
 			__DEBUG( "Created generation %d for storing stabilization information", createdGeneration->number );
 			
+			conflictSet->stabilizedGeneration = generationNumber;
 			ConflictSet_notifyStabilization( conflictSet, generationNumber );
 		}
 		else 
@@ -271,6 +290,7 @@ void ConflictSet_updateStabilization( ConflictSet *conflictSet, int generationNu
 		}
 	}
 	
+	ConflictSet_showState( conflictSet );
 	pthread_mutex_unlock( &conflictSet->writeLock );
 }
 
@@ -285,6 +305,11 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	if( conflictSet->propagatedGeneration == -1 ) {
 		generationPosition = 0;
 	}
+	else if( conflictSet->propagatedGeneration >= conflictSet->maxGeneration )
+	{
+		__DEBUG( "No need to propagate!" );
+		return;
+	}
 	else 
 	{
 		/* Get the first generation that is not propagated */
@@ -297,7 +322,9 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 	
 	__DEBUG( "Starting to propagate from generation set with index: %d", generationPosition );
 	
-	for (currentGenPos = generationPosition; currentGenPos <= conflictSet->maxPosition; currentGenPos = (currentGenPos + 1 ) % conflictSet->numberOfGenerations ) 
+	for( currentGenPos = generationPosition; 
+		currentGenPos <= conflictSet->maxPosition; 
+		currentGenPos = (currentGenPos + 1 ) % conflictSet->numberOfGenerations ) 
 	{	
 		methodCallObject = conflictSet->generations[ currentGenPos ].generationData[__conf.id].methodCallObject;
 		
@@ -305,13 +332,14 @@ void ConflictSet_notifyPropagation( ConflictSet *conflictSet )
 		
 		//propagate( methodCallObject, __conf.replicas, conflictSet->dboid );	
 		conflictSet->propagatedGeneration = methodCallObject->generationNumber;
-		//__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
+		__DEBUG( "Propagted generation %d for object with dboid %s", methodCallObject->generationNumber, methodCallObject->databaseObjectId );
 	}
 	
 	
 	/* Sends all the updates to all nodes on the network */
 	propagateList( methodCalls, __conf.replicas, conflictSet->dboid );
 	
+	__DEBUG( "Propagated generation %d", conflictSet->propagatedGeneration );
 	g_slist_free( methodCalls );
 }
 
@@ -320,7 +348,7 @@ void ConflictSet_notifyStabilization( ConflictSet *conflictSet, int endGeneratio
 	int startGeneration;
 	
 	/* Check if stabilization has been performed before */
-	if( conflictSet->stabilizedGeneration == -1) 
+	if( conflictSet->stabilizedGeneration == -1 ) 
 	{
 		startGeneration = 0;
 	}
@@ -344,7 +372,10 @@ void ConflictSet_notifyStabilization( ConflictSet *conflictSet, int endGeneratio
 	
 		/* Update what generations that have been send */
 		conflictSet->stabilizedGeneration = endGeneration;
+
 	}
+	
+	__DEBUG( "Sended stabilization from gen %d to %d", startGeneration, endGeneration );
 }
 
 void ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, Generation *generation )
@@ -355,7 +386,7 @@ void ConflictSet_checkGenerationComplete( ConflictSet *conflictSet, Generation *
 		EventQueue_push( conflictSet->stabEventQueue, conflictSet->dboid );
 	}
 
-	__DEBUG( "Generation %d is not complete", generation->number );
+	//__DEBUG( "Generation %d is not complete", generation->number );
 }
 
 int ConflictSet_isEmpty( ConflictSet *conflictSet )
@@ -397,6 +428,13 @@ int ConflictSet_getGenerationPosition( ConflictSet *conflictSet, int generation 
 	int it;
 	int generationPosition;
 	
+	// Check if generation number is out of bounds 
+	if( generation < conflictSet->minGeneration || 
+		generation > conflictSet->maxGeneration )
+	{
+		return -1;
+	}
+
 	generationPosition = conflictSet->minPosition;
 	
 	for( it = conflictSet->minGeneration; it <= conflictSet->maxGeneration; ++it ) {
@@ -447,6 +485,8 @@ Generation* ConflictSet_createNewGeneration( ConflictSet *conflictSet )
 	/* Set default values to the new generation */
 	Generation_init( &conflictSet->generations[conflictSet->maxPosition] );
 	conflictSet->generations[conflictSet->maxPosition].number = conflictSet->maxGeneration;
+
+	__DEBUG(" Created generation %d", conflictSet->maxGeneration );
 	
 	return &conflictSet->generations[ conflictSet->maxPosition ];
 }
@@ -461,7 +501,7 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	
 	if( ConflictSet_isEmpty( conflictSet ) ) {
 		
-		__DEBUG( "popGeneration(): Conflict set is empty!" );
+		//__DEBUG( "popGeneration(): Conflict set is empty!" );
 		
 		/* Unlock the structure */
 		pthread_mutex_unlock( &conflictSet->writeLock );
@@ -474,7 +514,8 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	generation = &(conflictSet->generations[ conflictSet->minPosition ]);
 	
 	/* Only pop the generation if it is complete */
-	if( Generation_isComplete( generation ) ) {
+	if( Generation_isComplete( generation ) ) 
+	{
 
 		/* Move the buffer one step forward */
 		conflictSet->minPosition = (conflictSet->minPosition + 1) % conflictSet->numberOfGenerations;
@@ -506,69 +547,10 @@ Generation* ConflictSet_popGeneration( ConflictSet *conflictSet )
 	}
 }
 
-void ConflictSet_showState( ConflictSet *conflictSet, FILE *output )
+void ConflictSet_showState( ConflictSet *conflictSet )
 {
-	Generation *generation;
-	int it,
-		genPosition,
-		replicaIt,
-		maxGeneration;
-
-	
-	fprintf( output, "---\n" );
-	fprintf( output, "Number of generations: %d\n", ( conflictSet->maxGeneration - conflictSet->minGeneration ) + 1  );
-	fprintf( output, "Max number of generations: %d\n", conflictSet->numberOfGenerations );
-	fprintf( output, "Min Generation: %d\n", conflictSet->minGeneration );	
-	fprintf( output, "Max Generation: %d\n", conflictSet->maxGeneration );	
-	fprintf( output, "Min Position: %d\n", conflictSet->minPosition );	
-	fprintf( output, "Max Position: %d\n", conflictSet->maxPosition );	
-	fprintf( output, "DBoid: %s\n", conflictSet->dboid );
-	
-	/* Check if the conflict set is empty, print only if it is not empty */
-	if( !ConflictSet_isEmpty( conflictSet ) ) {
-
-		/* Iterate each generation in the conflict set */
-		genPosition = conflictSet->minPosition;
-		maxGeneration = conflictSet->maxGeneration;
-		for( it = conflictSet->minGeneration; it <= maxGeneration; it++ ) {
-
-			/* Fetches the current generation */
-			generation = &(conflictSet->generations[ genPosition ]);
-		
-			fprintf(stdout, "%d: ", generation->number );
-			for( replicaIt = 0; replicaIt < PRIDE_NUM_REPLICAS; replicaIt++ ) {
-
-				/* Detects which tyoe of update for that given replica */
-				switch( generation->generationType[ replicaIt ] ) {
-					
-					case GEN_UPDATE:
-						fprintf( output, "- [ %s ] ", generation->generationData[replicaIt].methodCallObject->methodName );
-					break;
-
-					case GEN_NO_UPDATE:
-						fprintf( output, "- [ NO_UPDATE ] " );
-					break;
-
-					case GEN_NONE:
-						fprintf( output, "- [ NONE ] " );
-					break;
-
-					default:
-						fprintf( output, "-%d", generation->generationType[ replicaIt ] );
-					break;
-
-				}
-
-				fprintf( output, "\n");
-			}
-			
-			/* Increment the position in the buffer */
-			genPosition = (genPosition + 1) % conflictSet->numberOfGenerations;
-		}
-	}
-	fprintf( output, "---\n" );
-
-	/* Flush all data to the output */
-	fflush( output );
-	
+	__DEBUG( "CS[ MAX: %d, MIN: %d, P: %d]", 
+			conflictSet->maxGeneration, 
+			conflictSet->minGeneration, 
+			conflictSet->propagatedGeneration );
 }

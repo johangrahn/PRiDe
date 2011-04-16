@@ -27,6 +27,12 @@
 #include <string.h>
 #include <unistd.h>
 
+
+/*
+ * !!
+ *  This code is not in usage 
+ * !!
+ */
 void* stabilizatorThreadProcess( void *data )
 {
 	
